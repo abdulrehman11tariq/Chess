@@ -10,6 +10,10 @@ using namespace  sf;
 
 int height = 8; 
 int width =  8;
+int window_height = 1050;
+int window_width  = 1050;
+int boarder_width = 33*1.5;
+int boarder_height = 33*1.5;
 
 void display_board(RenderWindow& window , bool WisPawnAlive[] , int Wpawn_x[] , int Wpawn_y[] , bool WisKnightAlive[] , int Wknight_x[] , int Wknight_y[] , bool WisBishopAlive[] , int Wbishop_x[] , int Wbishop_y[] , bool WisRookAlive[] , int Wrook_x[] , int Wrook_y[] , bool WisQueenAlive , int Wqueen_x , int Wqueen_y ,bool WisKingAlive , int Wking_x , int Wking_y , /*akd*/ bool BisPawnAlive[] , int Bpawn_x[] , int Bpawn_y[] , bool BisKnightAlive[] , int Bknight_x[] , int Bknight_y[] , bool BisBishopAlive[] , int Bbishop_x[] , int Bbishop_y[] , bool BisRookAlive[] , int Brook_x[] , int Brook_y[] , bool BisQueenAlive , int Bqueen_x , int Bqueen_y ,bool BisKingAlive , int Bking_x , int Bking_y ){
 	
@@ -65,41 +69,41 @@ void display_board(RenderWindow& window , bool WisPawnAlive[] , int Wpawn_x[] , 
 	
 	
 	
-	
+		
 	for(int i=0 ; i<8 ; i++){
 		if(WisPawnAlive[i]){
-		WpawnSprite.setPosition( Wpawn_y[i]*108 , Wpawn_x[i]*108 );
+		WpawnSprite.setPosition( Wpawn_x[i]*(window_height+boarder_height)/height , Wpawn_y[i]*(window_width+boarder_width)/width );
 		window.draw(WpawnSprite);
 			}
 		}
 		
 	for(int i=0 ; i< 2; i++){	
 		if(WisKnightAlive[i]){
-		WknightSprite.setPosition( Wknight_y[i]*108 , Wknight_x[i]*108 );
+		WknightSprite.setPosition( Wknight_x[i]*(window_height+boarder_height)/height , Wknight_y[i]*(window_width+boarder_width)/width );
 		window.draw(WknightSprite);
 			}
 		}
 		
 	for(int i=0 ; i< 2; i++){
 		if(WisRookAlive[i]){
-		WrookSprite.setPosition( Wrook_y[i]*108 , Wrook_x[i]*108 );
+		WrookSprite.setPosition( Wrook_x[i]*(window_height+boarder_height)/height , Wrook_y[i]*(window_width+boarder_width)/width );
 		window.draw(WrookSprite);
 			}
 		}
 	
 	if(WisQueenAlive){
-	WqueenSprite.setPosition(Wqueen_y*108 , Wqueen_x*108);
+	WqueenSprite.setPosition(Wqueen_x*(window_height+boarder_height)/height , Wqueen_y*(window_width+boarder_width)/width);
 	window.draw(WqueenSprite);
 		}
 	
 	if(WisKingAlive){
-	WkingSprite.setPosition(Wking_y*108 , Wking_x*108);
+	WkingSprite.setPosition(Wking_x*(window_height+boarder_height)/height , Wking_y*(window_width+boarder_width)/width);
 	window.draw(WkingSprite);
 		}
 		
 	for(int i=0 ; i< 2; i++){
 		if(WisBishopAlive[i]){
-		WbishopSprite.setPosition(Wbishop_y[i]*108 , Wbishop_x[i]*108);
+		WbishopSprite.setPosition(Wbishop_x[i]*(window_height+boarder_height)/height , Wbishop_y[i]*(window_width+boarder_width)/width);
 		window.draw(WbishopSprite);
 			}
 		}
@@ -107,14 +111,14 @@ void display_board(RenderWindow& window , bool WisPawnAlive[] , int Wpawn_x[] , 
 		
 	for(int i=0 ; i<8 ; i++){
 		if(BisPawnAlive[i]){
-		BpawnSprite.setPosition(Bpawn_y[i]*108 , Bpawn_x[i]*108);
+		BpawnSprite.setPosition(Bpawn_x[i]*(window_height+boarder_height)/height , Bpawn_y[i]*(window_width+boarder_width)/width);
 		window.draw(BpawnSprite);
 			}
 	}
 		
 	for(int i=0 ; i< 2; i++){	
 		if(BisKnightAlive[i]){
-		BknightSprite.setPosition(Bknight_y[i]*108 , Bknight_x[i]*108);
+		BknightSprite.setPosition(Bknight_x[i]*(window_height+boarder_height)/height , Bknight_y[i]*(window_width+boarder_width)/width);
 		window.draw(BknightSprite);
 			}
 		}
@@ -122,31 +126,34 @@ void display_board(RenderWindow& window , bool WisPawnAlive[] , int Wpawn_x[] , 
 	
 	for(int i=0 ; i< 2; i++){
 		if(BisRookAlive[i]){
-		BrookSprite.setPosition(Brook_y[i]*108 , Brook_x[i]*108);
+		BrookSprite.setPosition(Brook_x[i]*(window_height+boarder_height)/height , Brook_y[i]*(window_width+boarder_width)/width);
 		window.draw(BrookSprite);
 			}
 		}
 	
 	if(BisQueenAlive){
-	BqueenSprite.setPosition(Bqueen_y*108 , Bqueen_x*108);
+	BqueenSprite.setPosition(Bqueen_x*(window_height+boarder_height)/height , Bqueen_y*(window_width+boarder_width)/width);
 	window.draw(BqueenSprite);
 		}
 	
 	if(BisKingAlive){
-	BkingSprite.setPosition(Bking_y *108, Bking_x*108);
+	BkingSprite.setPosition(Bking_x *(window_height+boarder_height)/height, Bking_y*(window_width+boarder_width)/width);
 	window.draw(BkingSprite);
 		}
 	
 	for(int i=0 ; i< 2; i++){
 		if(BisBishopAlive[i]){
-		BbishopSprite.setPosition(Bbishop_y[i]*108 , Bbishop_x[i]*108);
+		BbishopSprite.setPosition(Bbishop_x[i]*(window_height+boarder_height)/height , Bbishop_y[i]*(window_width+boarder_width)/width);
 		window.draw(BbishopSprite);
 			}
 		}
 		
-	}
 	
+	
+	}
 
+
+//func end
 
 
 
@@ -162,7 +169,7 @@ int main(){
 	bgTexture.loadFromFile("assets/chessboard.png");
 	Sprite bgSprite(bgTexture);
 	bgSprite.setPosition(0,0);
-	bgSprite.setScale(3,3);
+	bgSprite.setScale(1.5,1.5);
 	
 	
 	
@@ -187,7 +194,7 @@ int main(){
 		
 		}
 		
-	int  Wpawn_x[8] , Wpawn_y[8] , Bpawn_x[8] , Bpawn_y[8] , Wrook_x[2] , Wrook_y[2] , Brook_x[2] , Brook_y[2] , Wknight_x[2] , Wknight_y[2] , Bknight_x[2] , Bknight_y[2] , Wbishop_x[2] , Wbishop_y[2] , Bbishop_x[2] , Bbishop_y[2] , Wking_x=7 , Wking_y=4 , Bking_x=0 , Bking_y=4 , Wqueen_x=7 , Wqueen_y=3 , Bqueen_x=0 , Bqueen_y=3;
+	int  Wpawn_x[8] , Wpawn_y[8] , Bpawn_x[8] , Bpawn_y[8] , Wrook_x[2] , Wrook_y[2] , Brook_x[2] , Brook_y[2] , Wknight_x[2] , Wknight_y[2] , Bknight_x[2] , Bknight_y[2] , Wbishop_x[2] , Wbishop_y[2] , Bbishop_x[2] , Bbishop_y[2] , Wking_y=7 , Wking_x=4 , Bking_y=0 , Bking_x=4 , Wqueen_y=7 , Wqueen_x=3 , Bqueen_y=0 , Bqueen_x=3;
 	
 	
 	char **board = new char* [height];
@@ -201,14 +208,14 @@ int main(){
 				//CAPITAL FOR WHITE
 				if(i == 1){
 				 board[i][j]='p';
-				 Bpawn_x[j] = i;
-				 Bpawn_y[j] = j;
+				 Bpawn_y[j] = i;
+				 Bpawn_x[j] = j;
 				 }
 				 
 				else if(i == 6){
 				 board[i][j] = 'P';
-				 Wpawn_x[j] = i;
-				 Wpawn_y[j] = j;
+				 Wpawn_y[j] = i;
+				 Wpawn_x[j] = j;
 				}
 			}
 		}
@@ -216,30 +223,30 @@ int main(){
 		
 		
 	for(int i=0; i<2 ; i++){
-		Brook_x[i]=0;
-		Bbishop_x[i]=0;
-		Bknight_x[i]=0;
+		Brook_y[i]=0;
+		Bbishop_y[i]=0;
+		Bknight_y[i]=0;
 		
 		
-		Wrook_x[i]=7;
-		Wbishop_x[i]=7;
-		Wknight_x[i]=7;
+		Wrook_y[i]=7;
+		Wbishop_y[i]=7;
+		Wknight_y[i]=7;
 		
 		if(i%2==0){
-			Wrook_y[i]=0;
-			Brook_y[i]=0;
-			Wknight_y[i]=1;
-			Bknight_y[i]=1;
-			Wbishop_y[i]=2;
-			Bbishop_y[i]=2;
+			Wrook_x[i]=0;
+			Brook_x[i]=0;
+			Wknight_x[i]=1;
+			Bknight_x[i]=1;
+			Wbishop_x[i]=2;
+			Bbishop_x[i]=2;
 		}
 		else{
-			Wrook_y[i]=7;
-			Brook_y[i]=7;
-			Wknight_y[i]=6;
-			Bknight_y[i]=6;
-			Wbishop_y[i]=5;
-			Bbishop_y[i]=5;
+			Wrook_x[i]=7;
+			Brook_x[i]=7;
+			Wknight_x[i]=6;
+			Bknight_x[i]=6;
+			Wbishop_x[i]=5;
+			Bbishop_x[i]=5;
 		}
 		
 	}	
@@ -272,7 +279,7 @@ int main(){
 	
 	
 	
-	RenderWindow window(VideoMode(867 , 870 ), "!!CHESS!!" , Style::Resize);
+	RenderWindow window(VideoMode(window_width , window_height ), "!!CHESS!!" , Style::Resize);
 	window.setFramerateLimit(60);
 	
 	
@@ -298,8 +305,7 @@ int main(){
 		window.draw(bgSprite);
 		
 		//calling functions
-		display_board(window , WisPawnAlive , Wpawn_x , Wpawn_y , WisKnightAlive , Wknight_x , Wknight_y , WisBishopAlive , Wbishop_x , Wbishop_y , WisRookAlive , Wrook_x , Wrook_y , WisQueenAlive , Wqueen_x , Wqueen_y ,WisKingAlive , Wking_x , Wking_y , /*akd*/  BisPawnAlive , Bpawn_x ,  Bpawn_y , BisKnightAlive , Bknight_x , Bknight_y , BisBishopAlive , Bbishop_x ,  Bbishop_y , BisRookAlive , Brook_x , Brook_y , BisQueenAlive , Bqueen_x , Bqueen_y ,BisKingAlive , Bking_x , Bking_y );
-		
+		display_board(window ,  WisPawnAlive, Wpawn_x, Wpawn_y, WisKnightAlive, Wknight_x, Wknight_y, WisBishopAlive, Wbishop_x, Wbishop_y, WisRookAlive, Wrook_x , Wrook_y, WisQueenAlive ,  Wqueen_x , Wqueen_y ,WisKingAlive , Wking_x , Wking_y , /*akd*/ BisPawnAlive, Bpawn_x, Bpawn_y, BisKnightAlive, Bknight_x, Bknight_y, BisBishopAlive, Bbishop_x, Bbishop_y, BisRookAlive , Brook_x, Brook_y , BisQueenAlive , Bqueen_x , Bqueen_y ,BisKingAlive , Bking_x , Bking_y );		
 		
 		
 		
