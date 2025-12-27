@@ -21,89 +21,100 @@ void display_board(RenderWindow& window , bool WisPawnAlive[] , int Wpawn_x[] , 
 	Texture WpawnTex;
 	WpawnTex.loadFromFile("assets/White/pawn.png");
 	Sprite WpawnSprite(WpawnTex);
+	WpawnSprite.setScale(2,2);
 	
 	Texture WrookTex;
 	WrookTex.loadFromFile("assets/White/rook.png");
 	Sprite WrookSprite(WrookTex);
+	WrookSprite.setScale(2,2);
 	
 	Texture WknightTex;
 	WknightTex.loadFromFile("assets/White/knight.png");
 	Sprite WknightSprite(WknightTex);
+	WknightSprite.setScale(2,2);
 	
 	Texture WbishopTex;
 	WbishopTex.loadFromFile("assets/White/bishop.png");
 	Sprite WbishopSprite(WbishopTex);
+	WbishopSprite.setScale(2,2);
 	
 	Texture WqueenTex;
 	WqueenTex.loadFromFile("assets/White/queen.png");
 	Sprite WqueenSprite(WqueenTex);
+	WqueenSprite.setScale(2,2);
 	
 	Texture WkingTex;
 	WkingTex.loadFromFile("assets/White/king.png");
 	Sprite WkingSprite(WkingTex);
+	WkingSprite.setScale(2,2);
 	
 	//SPRITES FOR  BLACK GOTTI
 	Texture BpawnTex;
 	BpawnTex.loadFromFile("assets/Black/pawn.png");
 	Sprite BpawnSprite(BpawnTex);
+	BpawnSprite.setScale(2,2);
 	
 	Texture BrookTex;
 	BrookTex.loadFromFile("assets/Black/rook.png");
 	Sprite BrookSprite(BrookTex);
+	BrookSprite.setScale(2,2);
 	
 	Texture BknightTex;
 	BknightTex.loadFromFile("assets/Black/knight.png");
 	Sprite BknightSprite(BknightTex);
+	BknightSprite.setScale(2,2);
 	
 	Texture BbishopTex;
 	BbishopTex.loadFromFile("assets/Black/bishop.png");
 	Sprite BbishopSprite(BbishopTex);
+	BbishopSprite.setScale(2,2);
 	
 	Texture BqueenTex;
 	BqueenTex.loadFromFile("assets/Black/queen.png");
 	Sprite BqueenSprite(BqueenTex);
+	BqueenSprite.setScale(2,2);
 	
 	Texture BkingTex;
 	BkingTex.loadFromFile("assets/Black/king.png");
 	Sprite BkingSprite(BkingTex);
+	BkingSprite.setScale(2,2);
 	
 	
 	
-		
 	for(int i=0 ; i<8 ; i++){
 		if(WisPawnAlive[i]){
-		WpawnSprite.setPosition( Wpawn_x[i]*(window_height+boarder_height)/height , Wpawn_y[i]*(window_width+boarder_width)/width );
+		WpawnSprite.setPosition( boarder_width + Wpawn_x[i]*((window_width-2*boarder_width)/width) + 15 , boarder_height + Wpawn_y[i]*((window_height-2*boarder_height)/height) + 33);
 		window.draw(WpawnSprite);
 			}
 		}
 		
 	for(int i=0 ; i< 2; i++){	
 		if(WisKnightAlive[i]){
-		WknightSprite.setPosition( Wknight_x[i]*(window_height+boarder_height)/height , Wknight_y[i]*(window_width+boarder_width)/width );
+		WknightSprite.setPosition( boarder_width + Wknight_x[i]*((window_width-2*boarder_width)/width) + 15 , boarder_height + Wknight_y[i]*((window_height-2*boarder_height)/height) + 33);
 		window.draw(WknightSprite);
 			}
 		}
 		
 	for(int i=0 ; i< 2; i++){
 		if(WisRookAlive[i]){
-		WrookSprite.setPosition( Wrook_x[i]*(window_height+boarder_height)/height , Wrook_y[i]*(window_width+boarder_width)/width );
+		WrookSprite.setPosition( boarder_width + Wrook_x[i]*((window_width-2*boarder_width)/width) + 15 , boarder_height + Wrook_y[i]*((window_height-2*boarder_height)/height) + 33 );
 		window.draw(WrookSprite);
 			}
 		}
 	
 	if(WisQueenAlive){
-	WqueenSprite.setPosition(Wqueen_x*(window_height+boarder_height)/height , Wqueen_y*(window_width+boarder_width)/width);
+	WqueenSprite.setPosition( boarder_width + Wqueen_x*((window_width-2*boarder_width)/width) + 15 , boarder_height + Wqueen_y*((window_height-2*boarder_height)/height) + 33 );
 	window.draw(WqueenSprite);
 		}
 	
 	if(WisKingAlive){
-	WkingSprite.setPosition(Wking_x*(window_height+boarder_height)/height , Wking_y*(window_width+boarder_width)/width);
+	WkingSprite.setPosition( boarder_width + Wking_x*((window_width-2*boarder_width)/width) + 15 , boarder_height + Wking_y*((window_height-2*boarder_height)/height) + 33 );
 	window.draw(WkingSprite);
 		}
 		
 	for(int i=0 ; i< 2; i++){
 		if(WisBishopAlive[i]){
-		WbishopSprite.setPosition(Wbishop_x[i]*(window_height+boarder_height)/height , Wbishop_y[i]*(window_width+boarder_width)/width);
+		WbishopSprite.setPosition( boarder_width + Wbishop_x[i]*((window_width-2*boarder_width)/width) + 15 , boarder_height + Wbishop_y[i]*((window_height-2*boarder_height)/height) + 33 );
 		window.draw(WbishopSprite);
 			}
 		}
@@ -111,14 +122,14 @@ void display_board(RenderWindow& window , bool WisPawnAlive[] , int Wpawn_x[] , 
 		
 	for(int i=0 ; i<8 ; i++){
 		if(BisPawnAlive[i]){
-		BpawnSprite.setPosition(Bpawn_x[i]*(window_height+boarder_height)/height , Bpawn_y[i]*(window_width+boarder_width)/width);
+		BpawnSprite.setPosition( boarder_width + Bpawn_x[i]*((window_width-2*boarder_width)/width) + 15 , boarder_height + Bpawn_y[i]*((window_height-2*boarder_height)/height) + 33 );
 		window.draw(BpawnSprite);
 			}
 	}
 		
 	for(int i=0 ; i< 2; i++){	
 		if(BisKnightAlive[i]){
-		BknightSprite.setPosition(Bknight_x[i]*(window_height+boarder_height)/height , Bknight_y[i]*(window_width+boarder_width)/width);
+		BknightSprite.setPosition( boarder_width + Bknight_x[i]*((window_width-2*boarder_width)/width) + 15 , boarder_height + Bknight_y[i]*((window_height-2*boarder_height)/height) + 33 );
 		window.draw(BknightSprite);
 			}
 		}
@@ -126,42 +137,164 @@ void display_board(RenderWindow& window , bool WisPawnAlive[] , int Wpawn_x[] , 
 	
 	for(int i=0 ; i< 2; i++){
 		if(BisRookAlive[i]){
-		BrookSprite.setPosition(Brook_x[i]*(window_height+boarder_height)/height , Brook_y[i]*(window_width+boarder_width)/width);
+		BrookSprite.setPosition( boarder_width + Brook_x[i]*((window_width-2*boarder_width)/width) + 15 , boarder_height + Brook_y[i]*((window_height-2*boarder_height)/height) + 33 );
 		window.draw(BrookSprite);
 			}
 		}
 	
 	if(BisQueenAlive){
-	BqueenSprite.setPosition(Bqueen_x*(window_height+boarder_height)/height , Bqueen_y*(window_width+boarder_width)/width);
+	BqueenSprite.setPosition( boarder_width + Bqueen_x*((window_width-2*boarder_width)/width) + 15 , boarder_height + Bqueen_y*((window_height-2*boarder_height)/height) + 33 );
 	window.draw(BqueenSprite);
 		}
 	
 	if(BisKingAlive){
-	BkingSprite.setPosition(Bking_x *(window_height+boarder_height)/height, Bking_y*(window_width+boarder_width)/width);
+	BkingSprite.setPosition( boarder_width + Bking_x*((window_width-2*boarder_width)/width) + 15 , boarder_height + Bking_y*((window_height-2*boarder_height)/height) + 33 );
 	window.draw(BkingSprite);
 		}
 	
 	for(int i=0 ; i< 2; i++){
 		if(BisBishopAlive[i]){
-		BbishopSprite.setPosition(Bbishop_x[i]*(window_height+boarder_height)/height , Bbishop_y[i]*(window_width+boarder_width)/width);
+		BbishopSprite.setPosition( boarder_width + Bbishop_x[i]*((window_width-2*boarder_width)/width) + 15 , boarder_height + Bbishop_y[i]*((window_height-2*boarder_height)/height) + 33);
 		window.draw(BbishopSprite);
 			}
 		}
 		
-	
-	
+		
 	}
-
 
 //func end
 
 
-
-
-
-
-
-
+//new func 
+void clicked(int** board, int mouseX , int mouseY){
+	
+	//pawn
+	if(board[mouseX][mouseY] == 'P'){
+		
+		
+		
+		
+		
+		
+	}
+	
+	//rook
+	if(board[mouseX][mouseY] == 'R'){
+		
+		
+		
+		
+		
+		
+	}
+	
+	//knight
+	if(board[mouseX][mouseY] == 'N'){
+		
+		
+		
+		
+		
+		
+	}
+	
+	//bishop 
+	if(board[mouseX][mouseY] == 'B'){
+		
+		
+		
+		
+		
+		
+	}
+	
+	//queen
+	if(board[mouseX][mouseY] == 'Q'){
+		
+		
+		
+		
+		
+		
+	}
+	
+	//king 
+	if(board[mouseX][mouseY] == 'K'){
+		
+		
+		
+		
+		
+		
+	}
+	
+	//-------------------KAALA-----------------
+	
+		//pawn
+	if(board[mouseX][mouseY] == 'p'){
+		
+		
+		
+		
+		
+		
+	}
+	
+	//rook
+	if(board[mouseX][mouseY] == 'r'){
+		
+		
+		
+		
+		
+		
+	}
+	
+	//knight
+	if(board[mouseX][mouseY] == 'n'){
+		
+		
+		
+		
+		
+		
+	}
+	
+	//bishop 
+	if(board[mouseX][mouseY] == 'b'){
+		
+		
+		
+		
+		
+		
+	}
+	
+	//queen
+	if(board[mouseX][mouseY] == 'q'){
+		
+		
+		
+		
+		
+		
+	}
+	
+	//king 
+	if(board[mouseX][mouseY] == 'k'){
+		
+		
+		
+		
+		
+		
+	}
+	
+	
+	
+}
+	
+//func end
 
 int main(){
 	
@@ -219,9 +352,9 @@ int main(){
 				}
 			}
 		}
-		
-		
-		
+
+
+
 	for(int i=0; i<2 ; i++){
 		Brook_y[i]=0;
 		Bbishop_y[i]=0;
@@ -299,6 +432,12 @@ int main(){
 		{
 			window.close();
 		}
+		
+		if(mouseButtonPressed->button == Mouse::Button::Left){
+			
+			clicked( board, mouseButtonPressed->position.x / 8 , mouseButtonPressed->position.y / 8 );
+			
+			}
 		
 		window.clear();
 		//background
