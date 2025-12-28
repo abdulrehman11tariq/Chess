@@ -81,6 +81,15 @@ void display_board(RenderWindow& window, char** board){
 	
 	
 	
+	
+	Texture possibleMovesTex;
+	possibleMovesTex.loadFromFile("assets/GrayCircle.png");
+	Sprite MoveS(possibleMovesTex);
+	MoveS.setScale(0.2 , 0.2);
+	
+	
+	
+	
 	for(int row = 0; row < 8; row++){
 		for(int col = 0; col < 8; col++){
 			char piece = board[row][col];
@@ -140,6 +149,13 @@ void display_board(RenderWindow& window, char** board){
 				BkingSprite.setPosition(posX, posY);
 				window.draw(BkingSprite);
 			}
+			else if(piece == 'O'){
+				MoveS.setPosition( posX, posY);
+				window.draw(MoveS);
+			}
+			
+			//moves-----------------	
+			
 		}
 	}
 	
@@ -148,130 +164,105 @@ void display_board(RenderWindow& window, char** board){
 
 
 //new func 
-void clicked(char** board, int mouseX , int mouseY){
+void clicked( RenderWindow& window ,char** board, int mouseX , int mouseY , bool& mouseClicked){
 	
-	//pawn
-	if(board[mouseX][mouseY] == 'P'){
-		
-		
-		
-		
-		
-		
+	
+	
+	
+	// pawn
+	if (board[mouseY][mouseX] == 'P') {
+
+		if( board[mouseY-1][mouseX] == ' ' ){
+			
+			
+			board[mouseY-1][mouseX] = 'O';
+			board[mouseY-2][mouseX] = 'O';
+			
+		}
+			
+
+	}
+
+	// rook
+	if (board[mouseY][mouseX] == 'R') {
+
+
+
+	}
+
+	// knight
+	if (board[mouseY][mouseX] == 'N') {
+
+
+
+	}
+
+	// bishop
+	if (board[mouseY][mouseX] == 'B') {
+
+
+  
+	}
+
+	// queen
+	if (board[mouseY][mouseX] == 'Q') {
+
+
+
+	}
+
+	// king
+	if (board[mouseY][mouseX] == 'K') {
+
+
+
+	}
+
+	// ------------------- KAALA -----------------
+
+	// pawn
+	if (board[mouseY][mouseX] == 'p') {
+
+
+
+	}
+
+	// rook
+	if (board[mouseY][mouseX] == 'r') {
+
+
+
+	}
+
+	// knight
+	if (board[mouseY][mouseX] == 'n') {
+
+
+
+	}
+
+	// bishop
+	if (board[mouseY][mouseX] == 'b') {
+
+
+
+	}
+
+	// queen
+	if (board[mouseY][mouseX] == 'q') {
+
+
+
+	}
+
+	// king
+	if (board[mouseY][mouseX] == 'k') {
+
+
+
 	}
 	
-	//rook
-	if(board[mouseX][mouseY] == 'R'){
-		
-		
-		
-		
-		
-		
-	}
-	
-	//knight
-	if(board[mouseX][mouseY] == 'N'){
-		
-		
-		
-		
-		
-		
-	}
-	
-	//bishop 
-	if(board[mouseX][mouseY] == 'B'){
-		
-		
-		
-		
-		
-		
-	}
-	
-	//queen
-	if(board[mouseX][mouseY] == 'Q'){
-		
-		
-		
-		
-		
-		
-	}
-	
-	//king 
-	if(board[mouseX][mouseY] == 'K'){
-		
-		
-		
-		
-		
-		
-	}
-	
-	//-------------------KAALA-----------------
-	
-		//pawn
-	if(board[mouseX][mouseY] == 'p'){
-		
-		
-		
-		
-		
-		
-	}
-	
-	//rook
-	if(board[mouseX][mouseY] == 'r'){
-		
-		
-		
-		
-		
-		
-	}
-	
-	//knight
-	if(board[mouseX][mouseY] == 'n'){
-		
-		
-		
-		
-		
-		
-	}
-	
-	//bishop 
-	if(board[mouseX][mouseY] == 'b'){
-		
-		
-		
-		
-		
-		
-	}
-	
-	//queen
-	if(board[mouseX][mouseY] == 'q'){
-		
-		
-		
-		
-		
-		
-	}
-	
-	//king 
-	if(board[mouseX][mouseY] == 'k'){
-		
-		
-		
-		
-		
-		
-	}
-	
+	mouseClicked = true;
 	
 	
 }
@@ -394,6 +385,27 @@ int main(){
 	
 	
 	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	//------------------
+	
+	//for mouse pos X Y
+	int x=0 , y=0;
+	bool mouseClicked=false;
+	
+	
+	
+	
+	
+	//------------------
 	RenderWindow window(VideoMode(window_width , window_height ), "!!CHESS!!" , Style::Resize);
 	window.setFramerateLimit(60);
 	
@@ -407,7 +419,27 @@ int main(){
 			{
 				window.close();
 			}
+			
+			if(ev.type == Event::MouseButtonPressed){
+				if(ev.mouseButton.button == Mouse::Button::Left ){
+					
+					for(int i=0 ; i<height ; i++){
+						for(int j=0 ; j<width ; j++){
+							if(board[i][j] == 'O')
+								board[i][j] == ' ';
+							}
+						}
+						
+						
+					x= (ev.mouseButton.x - boarder_width) / ((window_width - 2*boarder_width) / width);
+					y= (ev.mouseButton.y - boarder_height) / ((window_height - 2*boarder_height) / height);
+					
+					clicked( window, board, x , y , mouseClicked );
+					
+					}
+			}
 		}
+		
 		
 		//presing escape to close
 		if (Keyboard::isKeyPressed(Keyboard::Escape))
@@ -415,22 +447,15 @@ int main(){
 			window.close();
 		}
 		
-		Event mouseButtonPressed;
-		
-		if(mouseButtonPressed.type == sf::Event::MouseButtonPressed){
-			if(mouseButtonPressed.mouseButton.button == Mouse::Button::Left){
-				
-				clicked( board, mouseButtonPressed.mouseButton.x / 8 , mouseButtonPressed.mouseButton.y / 8 );
-				
-				}
-		}
-		
 		window.clear();
 		//background
 		window.draw(bgSprite);
 		
 		//calling functions
-		display_board(window, board);		
+		display_board(window, board);	
+		
+		if(mouseClicked)
+			clicked( window, board, x , y , mouseClicked );
 		
 		
 		
