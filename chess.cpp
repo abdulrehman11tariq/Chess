@@ -82,10 +82,6 @@ void display_board(RenderWindow& window, char** board){
 	
 	
 	
-	Texture possibleMovesTex;
-	possibleMovesTex.loadFromFile("assets/GrayCircle.png");
-	Sprite MoveS(possibleMovesTex);
-	MoveS.setScale(0.2 , 0.2);
 	
 	
 	
@@ -150,12 +146,10 @@ void display_board(RenderWindow& window, char** board){
 				window.draw(BkingSprite);
 			}
 			else if(piece == 'O'){
-				MoveS.setPosition( posX, posY);
-				window.draw(MoveS);
+				//move
+				
 			}
-			
-			//moves-----------------	
-			
+						
 		}
 	}
 	
