@@ -17,73 +17,80 @@ int boarder_height = 33*1.5;
 
 void display_board(RenderWindow& window, char** board){
 	
+	//Circle for Move Display
+	float tileSize = (window_width - 2 * boarder_width) / width;
+
+	CircleShape moveCircle;
+	float radius = tileSize * 0.28f;
+
+	moveCircle.setRadius(radius);
+	moveCircle.setOrigin(radius, radius);
+
+	// semi transparent gray
+	moveCircle.setFillColor(Color(120, 120, 120, 170));
+
+	
 	//SPRITES FOR WHITE GOTTI
-	Texture WpawnTex;
+	static Texture WpawnTex;
 	WpawnTex.loadFromFile("assets/White/pawn.png");
-	Sprite WpawnSprite(WpawnTex);
+	static Sprite WpawnSprite(WpawnTex);
 	WpawnSprite.setScale(2,2);
 	
-	Texture WrookTex;
+	static Texture WrookTex;
 	WrookTex.loadFromFile("assets/White/rook.png");
-	Sprite WrookSprite(WrookTex);
+	static Sprite WrookSprite(WrookTex);
 	WrookSprite.setScale(2,2);
 	
-	Texture WknightTex;
+	static Texture WknightTex;
 	WknightTex.loadFromFile("assets/White/knight.png");
-	Sprite WknightSprite(WknightTex);
+	static Sprite WknightSprite(WknightTex);
 	WknightSprite.setScale(2,2);
 	
-	Texture WbishopTex;
+	static Texture WbishopTex;
 	WbishopTex.loadFromFile("assets/White/bishop.png");
-	Sprite WbishopSprite(WbishopTex);
+	static Sprite WbishopSprite(WbishopTex);
 	WbishopSprite.setScale(2,2);
 	
-	Texture WqueenTex;
+	static Texture WqueenTex;
 	WqueenTex.loadFromFile("assets/White/queen.png");
-	Sprite WqueenSprite(WqueenTex);
+	static Sprite WqueenSprite(WqueenTex);
 	WqueenSprite.setScale(2,2);
 	
-	Texture WkingTex;
+	static Texture WkingTex;
 	WkingTex.loadFromFile("assets/White/king.png");
-	Sprite WkingSprite(WkingTex);
+	static Sprite WkingSprite(WkingTex);
 	WkingSprite.setScale(2,2);
 	
 	//SPRITES FOR BLACK GOTTI
-	Texture BpawnTex;
+	static Texture BpawnTex;
 	BpawnTex.loadFromFile("assets/Black/pawn.png");
-	Sprite BpawnSprite(BpawnTex);
+	static Sprite BpawnSprite(BpawnTex);
 	BpawnSprite.setScale(2,2);
 	
-	Texture BrookTex;
+	static Texture BrookTex;
 	BrookTex.loadFromFile("assets/Black/rook.png");
-	Sprite BrookSprite(BrookTex);
+	static Sprite BrookSprite(BrookTex);
 	BrookSprite.setScale(2,2);
 	
-	Texture BknightTex;
+	static Texture BknightTex;
 	BknightTex.loadFromFile("assets/Black/knight.png");
-	Sprite BknightSprite(BknightTex);
+	static Sprite BknightSprite(BknightTex);
 	BknightSprite.setScale(2,2);
 	
-	Texture BbishopTex;
+	static Texture BbishopTex;
 	BbishopTex.loadFromFile("assets/Black/bishop.png");
-	Sprite BbishopSprite(BbishopTex);
+	static Sprite BbishopSprite(BbishopTex);
 	BbishopSprite.setScale(2,2);
 	
-	Texture BqueenTex;
+	static Texture BqueenTex;
 	BqueenTex.loadFromFile("assets/Black/queen.png");
-	Sprite BqueenSprite(BqueenTex);
+	static Sprite BqueenSprite(BqueenTex);
 	BqueenSprite.setScale(2,2);
 	
-	Texture BkingTex;
+	static Texture BkingTex;
 	BkingTex.loadFromFile("assets/Black/king.png");
-	Sprite BkingSprite(BkingTex);
+	static Sprite BkingSprite(BkingTex);
 	BkingSprite.setScale(2,2);
-	
-	
-	
-	
-	
-	
 	
 	
 	for(int row = 0; row < 8; row++){
@@ -147,6 +154,11 @@ void display_board(RenderWindow& window, char** board){
 			}
 			else if(piece == 'O'){
 				//move
+				float centerX = boarder_width + col * tileSize + tileSize / 2.f;
+				float centerY = boarder_height + row * tileSize + tileSize / 2.f;
+
+				moveCircle.setPosition(centerX, centerY);
+				window.draw(moveCircle);
 				
 			}
 						
