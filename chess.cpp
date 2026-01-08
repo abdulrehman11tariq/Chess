@@ -166,11 +166,12 @@ void display_board(RenderWindow& window, char** board){
 	}
 	
 }
+
 //func end
 
 
 //new func 
-void clicked( RenderWindow& window ,char** board, int mouseX , int mouseY , bool& mouseClicked){
+void clicked( RenderWindow& window ,char** board, int mouseX , int mouseY , bool& mouseClicked , bool& turn){
 	static int last_mouseY = 0 , last_mouseX = 0 ;
 	static char last_clicked_piece = ' ';
 	
@@ -190,6 +191,31 @@ void clicked( RenderWindow& window ,char** board, int mouseX , int mouseY , bool
 					board[i][j] = ' ';
 				}
 			}
+		
+		turn = !turn;
+	
+		//Rotating the matrix for next person's turn!!!!! :yum:
+		
+		
+		//	----------------FAILED ATTEMPT TO ROTATE A MATRIX 18- DEGREE-----------------------------------
+		
+		
+		char temp[height][width];
+		
+		for(int i=0 ; i<height ; i++){
+			for(int j=0 ; j<width ; j++){
+				temp[i][j] = board[height-1-i][width-1-j];
+				}
+			}
+		
+		for(int i=0 ; i<height ; i++){
+			for(int j=0 ; j<width ; j++){
+				board[i][j] = temp[i][j];
+				}
+			}
+		
+		
+		
 		return;
 		
 	}
@@ -202,265 +228,430 @@ void clicked( RenderWindow& window ,char** board, int mouseX , int mouseY , bool
 			}
 		}
 	
-	// pawn
-	if (board[mouseY][mouseX] == 'P') {
-		last_clicked_piece = 'P';
-		if( board[mouseY-1][mouseX] == ' ' ){
-			board[mouseY-1][mouseX] = 'O';
-			if(board[mouseY-2][mouseX] == ' ' && mouseY == 6 )
-				board[mouseY-2][mouseX] = 'O';
+	if(turn == 1){
+		// pawn
+		if (board[mouseY][mouseX] == 'P') {
+			last_clicked_piece = 'P';
+			if( board[mouseY-1][mouseX] == ' ' ){
+				board[mouseY-1][mouseX] = 'O';
+				if(board[mouseY-2][mouseX] == ' ' && mouseY == 6 )
+					board[mouseY-2][mouseX] = 'O';
+			}
+				
+
 		}
+
+		// rook
+		if (board[mouseY][mouseX] == 'R') {
+		last_clicked_piece = 'R';
+			
+			//moves after that peice
+			for(int i=mouseX+1 ; i<width ; i++){
+				
+				if(board[mouseY][i] == ' ')
+					board[mouseY][i] = 'O';
+				else break;
+				}
+			
+			//moves before that
+			for(int i=mouseX-1 ; i>=0 ; i--){
+				
+				if(board[mouseY][i] == ' ')
+					board[mouseY][i] = 'O';
+				else break;
+				}
+			
+			//moves after that peice
+			for(int i =mouseY+1 ; i<height ;  i++){
+				
+				if(board[i][mouseX] == ' ')
+					board[i][mouseX] = 'O';
+				else break;
+				}
+			
+			//moves before that
+			for(int i=mouseY-1 ; i>=0 ;  i--){
+				
+				if(board[i][mouseX] == ' ')
+					board[i][mouseX] = 'O';
+				else break;
+				}
+				
+		}
+
+		// knight
+		if (board[mouseY][mouseX] == 'N') {
+		last_clicked_piece = 'N';
+			
+			
+			if(mouseX-1 >= 0  &&  mouseY+2 < height  &&  board[mouseY+2][mouseX-1] == ' ') 					board[mouseY+2][mouseX-1] = 'O';
+		
+			if(mouseX+1 < width  &&  mouseY+2 < height  &&  board[mouseY+2][mouseX+1] == ' ') 				board[mouseY+2][mouseX+1] = 'O';
+			
+			if(mouseY-1 >= 0  &&  mouseX+2 < width  &&  board[mouseY-1][mouseX+2] == ' ') 					board[mouseY-1][mouseX+2] = 'O';
+			
+			if(mouseY+1 < height  &&  mouseX+2 < width  &&  board[mouseY+1][mouseX+2] == ' ') 				board[mouseY+1][mouseX+2] = 'O';
+			
+			if(mouseY-2 >= 0  &&  mouseX-1 >= 0  &&  board[mouseY-2][mouseX-1] == ' ') 					board[mouseY-2][mouseX-1] = 'O';
+			
+			if(mouseY-2 >= 0  &&  mouseX+1 < width  &&  board[mouseY-2][mouseX+1] == ' ') 					board[mouseY-2][mouseX+1] = 'O';
+			
+			if(mouseY-1 >= 0  &&  mouseX-2 >= 0  &&  board[mouseY-1][mouseX-2] == ' ') 					board[mouseY-1][mouseX-2] = 'O';
+			
+			if(mouseY+1 < height  &&  mouseX-2 >= 0  &&  board[mouseY+1][mouseX-2] == ' ') 					board[mouseY+1][mouseX-2] = 'O';
+
 			
 
-	}
+		}
 
-	// rook
-	if (board[mouseY][mouseX] == 'R') {
-	last_clicked_piece = 'R';
-		
-		//moves after that peice
-		for(int i=mouseX+1 ; i<width ; i++){
-			
-			if(board[mouseY][i] == ' ')
-				board[mouseY][i] = 'O';
-			else break;
-			}
-		
-		//moves before that
-		for(int i=mouseX-1 ; i>=0 ; i--){
-			
-			if(board[mouseY][i] == ' ')
-				board[mouseY][i] = 'O';
-			else break;
-			}
-		
-		//moves after that peice
-		for(int i =mouseY+1 ; i<height ;  i++){
-			
-			if(board[i][mouseX] == ' ')
-				board[i][mouseX] = 'O';
-			else break;
-			}
-		
-		//moves before that
-		for(int i=mouseY-1 ; i>=0 ;  i--){
-			
-			if(board[i][mouseX] == ' ')
-				board[i][mouseX] = 'O';
-			else break;
-			}
-			
-	}
+		// bishop
+		if (board[mouseY][mouseX] == 'B') {
+		last_clicked_piece = 'B';
 
-	// knight
-	if (board[mouseY][mouseX] == 'N') {
-	last_clicked_piece = 'N';
-		
-		
-		if(mouseX-1 >= 0  &&  mouseY+2 < height  &&  board[mouseY+2][mouseX-1] == ' ') 					board[mouseY+2][mouseX-1] = 'O';
-	
-		if(mouseX+1 < width  &&  mouseY+2 < height  &&  board[mouseY+2][mouseX+1] == ' ') 				board[mouseY+2][mouseX+1] = 'O';
-		
-		if(mouseY-1 >= 0  &&  mouseX+2 < width  &&  board[mouseY-1][mouseX+2] == ' ') 					board[mouseY-1][mouseX+2] = 'O';
-		
-		if(mouseY+1 < height  &&  mouseX+2 < width  &&  board[mouseY+1][mouseX+2] == ' ') 				board[mouseY+1][mouseX+2] = 'O';
-		
-		if(mouseY-2 >= 0  &&  mouseX-1 >= 0  &&  board[mouseY-2][mouseX-1] == ' ') 					board[mouseY-2][mouseX-1] = 'O';
-		
-		if(mouseY-2 >= 0  &&  mouseX+1 < width  &&  board[mouseY-2][mouseX+1] == ' ') 					board[mouseY-2][mouseX+1] = 'O';
-		
-		if(mouseY-1 >= 0  &&  mouseX-2 >= 0  &&  board[mouseY-1][mouseX-2] == ' ') 					board[mouseY-1][mouseX-2] = 'O';
-		
-		if(mouseY+1 < height  &&  mouseX-2 >= 0  &&  board[mouseY+1][mouseX-2] == ' ') 					board[mouseY+1][mouseX-2] = 'O';
+			for(int i=1 ; i<height ; i++){
+				
+				if( mouseY+i<height && mouseX+i<width && board[mouseY + i][mouseX + i] ==' ')
+					board[mouseY + i][mouseX + i] = 'O';
+				else break;
+				
+				}
+				
+			for(int i=1 ; i<height ; i++){
+				
+				if( mouseY-i >= 0 && mouseX+i < width && board[mouseY - i][mouseX + i] ==' ')
+					board[mouseY - i][mouseX + i] = 'O';
+				else break;
+				
+				}
+				
+			for(int i=1 ; i<height ; i++){
+				
+				if( mouseY-i >= 0 && mouseX-i >= 0 && board[mouseY - i][mouseX - i] ==' ')
+					board[mouseY - i][mouseX - i] = 'O';
+				else break;
+				
+				}	
+				
+			for(int i=1 ; i<height ; i++){
+				
+				if( mouseY+i < height && mouseX-i >= 0 && board[mouseY + i][mouseX - i] ==' ')
+					board[mouseY + i][mouseX - i] = 'O';
+				else break;
+				
+				}
+	  
+		}
 
-		
+		// queen
+		if (board[mouseY][mouseX] == 'Q') {
+		last_clicked_piece = 'Q';
+			
+		//all rook moves
+			//moves after that peice
+			for(int i=mouseX+1 ; i<width ; i++){
+				
+				if(board[mouseY][i] == ' ')
+					board[mouseY][i] = 'O';
+				else break;
+				}
+			
+			//moves before that
+			for(int i=mouseX-1 ; i>=0 ; i--){
+				
+				if(board[mouseY][i] == ' ')
+					board[mouseY][i] = 'O';
+				else break;
+				}
+			
+			//moves after that peice
+			for(int i =mouseY+1 ; i<height ;  i++){
+				
+				if(board[i][mouseX] == ' ')
+					board[i][mouseX] = 'O';
+				else break;
+				}
+			
+			//moves before that
+			for(int i=mouseY-1 ; i>=0 ;  i--){
+				
+				if(board[i][mouseX] == ' ')
+					board[i][mouseX] = 'O';
+				else break;
+				}
+			
+			
+			
+		//all bishop movessssss
+			for(int i=1 ; i<height ; i++){
+				
+				if( mouseY+i<height && mouseX+i<width && board[mouseY + i][mouseX + i] ==' ')
+					board[mouseY + i][mouseX + i] = 'O';
+				else break;
+				
+				}
+				
+			for(int i=1 ; i<height ; i++){
+				
+				if( mouseY-i >= 0 && mouseX+i < width && board[mouseY - i][mouseX + i] ==' ')
+					board[mouseY - i][mouseX + i] = 'O';
+				else break;
+				
+				}
+				
+			for(int i=1 ; i<height ; i++){
+				
+				if( mouseY-i >= 0 && mouseX-i >= 0 && board[mouseY - i][mouseX - i] ==' ')
+					board[mouseY - i][mouseX - i] = 'O';
+				else break;
+				
+				}	
+				
+			for(int i=1 ; i<height ; i++){
+				
+				if( mouseY+i < height && mouseX-i >= 0 && board[mouseY + i][mouseX - i] ==' ')
+					board[mouseY + i][mouseX - i] = 'O';
+				else break;
+				
+				}
 
-	}
+		}
 
-	// bishop
-	if (board[mouseY][mouseX] == 'B') {
-	last_clicked_piece = 'B';
-
-		for(int i=1 ; i<height ; i++){
-			
-			if( mouseY+i<height && mouseX+i<width && board[mouseY + i][mouseX + i] ==' ')
-				board[mouseY + i][mouseX + i] = 'O';
-			else break;
-			
-			}
-			
-		for(int i=1 ; i<height ; i++){
-			
-			if( mouseY-i >= 0 && mouseX+i < width && board[mouseY - i][mouseX + i] ==' ')
-				board[mouseY - i][mouseX + i] = 'O';
-			else break;
-			
-			}
-			
-		for(int i=1 ; i<height ; i++){
-			
-			if( mouseY-i >= 0 && mouseX-i >= 0 && board[mouseY - i][mouseX - i] ==' ')
-				board[mouseY - i][mouseX - i] = 'O';
-			else break;
-			
-			}	
-			
-		for(int i=1 ; i<height ; i++){
-			
-			if( mouseY+i < height && mouseX-i >= 0 && board[mouseY + i][mouseX - i] ==' ')
-				board[mouseY + i][mouseX - i] = 'O';
-			else break;
-			
-			}
-  
-	}
-
-	// queen
-	if (board[mouseY][mouseX] == 'Q') {
-	last_clicked_piece = 'Q';
-		
-	//all rook moves
-		//moves after that peice
-		for(int i=mouseX+1 ; i<width ; i++){
-			
-			if(board[mouseY][i] == ' ')
-				board[mouseY][i] = 'O';
-			else break;
-			}
-		
-		//moves before that
-		for(int i=mouseX-1 ; i>=0 ; i--){
-			
-			if(board[mouseY][i] == ' ')
-				board[mouseY][i] = 'O';
-			else break;
-			}
-		
-		//moves after that peice
-		for(int i =mouseY+1 ; i<height ;  i++){
-			
-			if(board[i][mouseX] == ' ')
-				board[i][mouseX] = 'O';
-			else break;
-			}
-		
-		//moves before that
-		for(int i=mouseY-1 ; i>=0 ;  i--){
-			
-			if(board[i][mouseX] == ' ')
-				board[i][mouseX] = 'O';
-			else break;
-			}
+		// king
+		if (board[mouseY][mouseX] == 'K') {
+		last_clicked_piece = 'K';
 		
 		
+			if(mouseX-1 >= 0  &&  board[mouseY][mouseX-1] == ' ') 					board[mouseY][mouseX-1] = 'O';
+			
+			if(mouseX+1 < width  &&  board[mouseY][mouseX+1] == ' ') 				board[mouseY][mouseX+1] = 'O';
+			
+			if(mouseY-1 >= 0  &&  board[mouseY-1][mouseX] == ' ') 					board[mouseY-1][mouseX] = 'O';
+			
+			if(mouseY+1 < height  &&  board[mouseY+1][mouseX] == ' ') 				board[mouseY+1][mouseX] = 'O';
+			
+			if(mouseY+1 < height  &&  mouseX-1 >= 0  &&  board[mouseY+1][mouseX-1] == ' ') 		board[mouseY+1][mouseX-1] = 'O';
+			
+			if(mouseY+1 < height  &&  mouseX+1 < width  &&  board[mouseY+1][mouseX+1] == ' ') 	board[mouseY+1][mouseX+1] = 'O';
+			
+			if(mouseY-1 >= 0  &&  mouseX-1 >= 0  &&  board[mouseY-1][mouseX-1] == ' ') 		board[mouseY-1][mouseX-1] = 'O';
 		
-	//all bishop movessssss
-		for(int i=1 ; i<height ; i++){
-			
-			if( mouseY+i<height && mouseX+i<width && board[mouseY + i][mouseX + i] ==' ')
-				board[mouseY + i][mouseX + i] = 'O';
-			else break;
-			
-			}
-			
-		for(int i=1 ; i<height ; i++){
-			
-			if( mouseY-i >= 0 && mouseX+i < width && board[mouseY - i][mouseX + i] ==' ')
-				board[mouseY - i][mouseX + i] = 'O';
-			else break;
-			
-			}
-			
-		for(int i=1 ; i<height ; i++){
-			
-			if( mouseY-i >= 0 && mouseX-i >= 0 && board[mouseY - i][mouseX - i] ==' ')
-				board[mouseY - i][mouseX - i] = 'O';
-			else break;
-			
-			}	
-			
-		for(int i=1 ; i<height ; i++){
-			
-			if( mouseY+i < height && mouseX-i >= 0 && board[mouseY + i][mouseX - i] ==' ')
-				board[mouseY + i][mouseX - i] = 'O';
-			else break;
-			
-			}
-
-	}
-
-	// king
-	if (board[mouseY][mouseX] == 'K') {
-	last_clicked_piece = 'K';
-	
-	
-		if(mouseX-1 >= 0  &&  board[mouseY][mouseX-1] == ' ') 					board[mouseY][mouseX-1] = 'O';
+			if(mouseY-1 >= 0  &&  mouseX+1 < width  &&  board[mouseY-1][mouseX+1] == ' ') 		board[mouseY-1][mouseX+1] = 'O';
 		
-		if(mouseX+1 < width  &&  board[mouseY][mouseX+1] == ' ') 				board[mouseY][mouseX+1] = 'O';
 		
-		if(mouseY-1 >= 0  &&  board[mouseY-1][mouseX] == ' ') 					board[mouseY-1][mouseX] = 'O';
-		
-		if(mouseY+1 < height  &&  board[mouseY+1][mouseX] == ' ') 				board[mouseY+1][mouseX] = 'O';
-		
-		if(mouseY+1 < height  &&  mouseX-1 >= 0  &&  board[mouseY+1][mouseX-1] == ' ') 		board[mouseY+1][mouseX-1] = 'O';
-		
-		if(mouseY+1 < height  &&  mouseX+1 < width  &&  board[mouseY+1][mouseX+1] == ' ') 	board[mouseY+1][mouseX+1] = 'O';
-		
-		if(mouseY-1 >= 0  &&  mouseX-1 >= 0  &&  board[mouseY-1][mouseX-1] == ' ') 		board[mouseY-1][mouseX-1] = 'O';
-	
-		if(mouseY-1 >= 0  &&  mouseX+1 < width  &&  board[mouseY-1][mouseX+1] == ' ') 		board[mouseY-1][mouseX+1] = 'O';
-	
-	
+		}
 	}
 
 	// ------------------- KAALA -----------------
-
-	// pawn
-	if (board[mouseY][mouseX] == 'p') {
-	last_clicked_piece = 'p';
-		if( board[mouseY+1][mouseX] == ' ' ){
-			
-			board[mouseY+1][mouseX] = 'O';
-			if(board[mouseY+2][mouseX] == ' ' && mouseY == 1 )
-				board[mouseY+2][mouseX] = 'O';
-		}
-	
-	}
-
-	// rook
-	if (board[mouseY][mouseX] == 'r') {
-	last_clicked_piece = 'r';
+	if(turn == 0){
+		// pawn
+		if (board[mouseY][mouseX] == 'p') {
+		last_clicked_piece = 'p';
+			if( board[mouseY-1][mouseX] == ' ' ){
+				
+				board[mouseY-1][mouseX] = 'O';
+				if(board[mouseY-2][mouseX] == ' ' && mouseY == 6 )
+					board[mouseY-2][mouseX] = 'O';
+			}
 		
+		}
+
+		// rook
+		if (board[mouseY][mouseX] == 'r') {
+		last_clicked_piece = 'r';
+			
+			//moves after that peice
+			for(int i=mouseX+1 ; i<width ; i++){
+				
+				if(board[mouseY][i] == ' ')
+					board[mouseY][i] = 'O';
+				else break;
+				}
+			
+			//moves before that
+			for(int i=mouseX-1 ; i>=0 ; i--){
+				
+				if(board[mouseY][i] == ' ')
+					board[mouseY][i] = 'O';
+				else break;
+				}
+			
+			//moves after that peice
+			for(int i =mouseY+1 ; i<height ;  i++){
+				
+				if(board[i][mouseX] == ' ')
+					board[i][mouseX] = 'O';
+				else break;
+				}
+			
+			//moves before that
+			for(int i=mouseY-1 ; i>=0 ;  i--){
+				
+				if(board[i][mouseX] == ' ')
+					board[i][mouseX] = 'O';
+				else break;
+				}
 
 
-	}
+		}
 
-	// knight
-	if (board[mouseY][mouseX] == 'n') {
-	last_clicked_piece = 'n';
-
-
-	}
-
-	// bishop
-	if (board[mouseY][mouseX] == 'b') {
-	last_clicked_piece = 'b';
-
-
-	}
-
-	// queen
-	if (board[mouseY][mouseX] == 'q') {
-	last_clicked_piece = 'q';
-
-
-	}
-
-	// king
-	if (board[mouseY][mouseX] == 'k') {
-	last_clicked_piece = 'k';
+		// knight
+		if (board[mouseY][mouseX] == 'n') {
+		last_clicked_piece = 'n';
+		
+			if(mouseX-1 >= 0  &&  mouseY+2 < height  &&  board[mouseY+2][mouseX-1] == ' ') 					board[mouseY+2][mouseX-1] = 'O';
+		
+			if(mouseX+1 < width  &&  mouseY+2 < height  &&  board[mouseY+2][mouseX+1] == ' ') 				board[mouseY+2][mouseX+1] = 'O';
+			
+			if(mouseY-1 >= 0  &&  mouseX+2 < width  &&  board[mouseY-1][mouseX+2] == ' ') 					board[mouseY-1][mouseX+2] = 'O';
+			
+			if(mouseY+1 < height  &&  mouseX+2 < width  &&  board[mouseY+1][mouseX+2] == ' ') 				board[mouseY+1][mouseX+2] = 'O';
+			
+			if(mouseY-2 >= 0  &&  mouseX-1 >= 0  &&  board[mouseY-2][mouseX-1] == ' ') 					board[mouseY-2][mouseX-1] = 'O';
+			
+			if(mouseY-2 >= 0  &&  mouseX+1 < width  &&  board[mouseY-2][mouseX+1] == ' ') 					board[mouseY-2][mouseX+1] = 'O';
+			
+			if(mouseY-1 >= 0  &&  mouseX-2 >= 0  &&  board[mouseY-1][mouseX-2] == ' ') 					board[mouseY-1][mouseX-2] = 'O';
+			
+			if(mouseY+1 < height  &&  mouseX-2 >= 0  &&  board[mouseY+1][mouseX-2] == ' ') 					board[mouseY+1][mouseX-2] = 'O';
 
 
+		}
+
+		// bishop
+		if (board[mouseY][mouseX] == 'b') {
+		last_clicked_piece = 'b';
+			
+			for(int i=1 ; i<height ; i++){
+				
+				if( mouseY+i<height && mouseX+i<width && board[mouseY + i][mouseX + i] ==' ')
+					board[mouseY + i][mouseX + i] = 'O';
+				else break;
+				
+				}
+				
+			for(int i=1 ; i<height ; i++){
+				
+				if( mouseY-i >= 0 && mouseX+i < width && board[mouseY - i][mouseX + i] ==' ')
+					board[mouseY - i][mouseX + i] = 'O';
+				else break;
+				
+				}
+				
+			for(int i=1 ; i<height ; i++){
+				
+				if( mouseY-i >= 0 && mouseX-i >= 0 && board[mouseY - i][mouseX - i] ==' ')
+					board[mouseY - i][mouseX - i] = 'O';
+				else break;
+				
+				}	
+				
+			for(int i=1 ; i<height ; i++){
+				
+				if( mouseY+i < height && mouseX-i >= 0 && board[mouseY + i][mouseX - i] ==' ')
+					board[mouseY + i][mouseX - i] = 'O';
+				else break;
+				
+				}
+
+		}
+
+		// queen
+		if (board[mouseY][mouseX] == 'q') {
+		last_clicked_piece = 'q';
+		
+		//all rook moves
+			//moves after that peice
+			for(int i=mouseX+1 ; i<width ; i++){
+				
+				if(board[mouseY][i] == ' ')
+					board[mouseY][i] = 'O';
+				else break;
+				}
+			
+			//moves before that
+			for(int i=mouseX-1 ; i>=0 ; i--){
+				
+				if(board[mouseY][i] == ' ')
+					board[mouseY][i] = 'O';
+				else break;
+				}
+			
+			//moves after that peice
+			for(int i =mouseY+1 ; i<height ;  i++){
+				
+				if(board[i][mouseX] == ' ')
+					board[i][mouseX] = 'O';
+				else break;
+				}
+			
+			//moves before that
+			for(int i=mouseY-1 ; i>=0 ;  i--){
+				
+				if(board[i][mouseX] == ' ')
+					board[i][mouseX] = 'O';
+				else break;
+				}
+			
+			
+			
+		//all bishop movessssss
+			for(int i=1 ; i<height ; i++){
+				
+				if( mouseY+i<height && mouseX+i<width && board[mouseY + i][mouseX + i] ==' ')
+					board[mouseY + i][mouseX + i] = 'O';
+				else break;
+				
+				}
+				
+			for(int i=1 ; i<height ; i++){
+				
+				if( mouseY-i >= 0 && mouseX+i < width && board[mouseY - i][mouseX + i] ==' ')
+					board[mouseY - i][mouseX + i] = 'O';
+				else break;
+				
+				}
+				
+			for(int i=1 ; i<height ; i++){
+				
+				if( mouseY-i >= 0 && mouseX-i >= 0 && board[mouseY - i][mouseX - i] ==' ')
+					board[mouseY - i][mouseX - i] = 'O';
+				else break;
+				
+				}	
+				
+			for(int i=1 ; i<height ; i++){
+				
+				if( mouseY+i < height && mouseX-i >= 0 && board[mouseY + i][mouseX - i] ==' ')
+					board[mouseY + i][mouseX - i] = 'O';
+				else break;
+				
+				}
+
+
+		}
+
+		// king
+		if (board[mouseY][mouseX] == 'k') {
+		last_clicked_piece = 'k';
+		
+			if(mouseX-1 >= 0  &&  board[mouseY][mouseX-1] == ' ') 					board[mouseY][mouseX-1] = 'O';
+			
+			if(mouseX+1 < width  &&  board[mouseY][mouseX+1] == ' ') 				board[mouseY][mouseX+1] = 'O';
+			
+			if(mouseY-1 >= 0  &&  board[mouseY-1][mouseX] == ' ') 					board[mouseY-1][mouseX] = 'O';
+			
+			if(mouseY+1 < height  &&  board[mouseY+1][mouseX] == ' ') 				board[mouseY+1][mouseX] = 'O';
+			
+			if(mouseY+1 < height  &&  mouseX-1 >= 0  &&  board[mouseY+1][mouseX-1] == ' ') 		board[mouseY+1][mouseX-1] = 'O';
+			
+			if(mouseY+1 < height  &&  mouseX+1 < width  &&  board[mouseY+1][mouseX+1] == ' ') 	board[mouseY+1][mouseX+1] = 'O';
+			
+			if(mouseY-1 >= 0  &&  mouseX-1 >= 0  &&  board[mouseY-1][mouseX-1] == ' ') 		board[mouseY-1][mouseX-1] = 'O';
+		
+			if(mouseY-1 >= 0  &&  mouseX+1 < width  &&  board[mouseY-1][mouseX+1] == ' ') 		board[mouseY-1][mouseX+1] = 'O';
+
+
+		}
 	}
 	
 	last_mouseY = mouseY;
@@ -603,8 +794,7 @@ int main(){
 	//for mouse pos X Y
 	int x=0 , y=0;
 	bool mouseClicked=false;
-	
-	
+	bool turn = 1; //1 for White --- 0 for Black
 	
 	
 	
@@ -631,7 +821,7 @@ int main(){
 					x= (ev.mouseButton.x - boarder_width) / ((window_width - 2*boarder_width) / width);
 					y= (ev.mouseButton.y - boarder_height) / ((window_height - 2*boarder_height) / height);
 					
-					clicked( window, board, x , y , mouseClicked );
+					clicked( window, board, x , y , mouseClicked , turn);
 					
 					}
 			}
@@ -652,7 +842,7 @@ int main(){
 		display_board(window, board);	
 		
 		if(mouseClicked)
-			clicked( window, board, x , y , mouseClicked );
+			clicked( window, board, x , y , mouseClicked , turn);
 		
 		
 		
