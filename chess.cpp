@@ -31,11 +31,13 @@ void display_board(RenderWindow& window, char** board , bool checkCapture[8][8])
 	
 	
 	//Square for capture display
-	CircleShape capSquare(tileSize , 4);	
+	CircleShape capSquare(tileSize/2 , 4);	
 	
 	//clr
 	capSquare.setFillColor(Color(120,120,120,170));
-
+	capSquare.setRotation(45);
+	capSquare.setOrigin(0,0);
+		
 	
 	//SPRITES FOR WHITE GOTTI
 	static Texture WpawnTex;
@@ -168,10 +170,18 @@ void display_board(RenderWindow& window, char** board , bool checkCapture[8][8])
 				window.draw(moveCircle);
 				
 			}
+			
+			
+			float centerX = boarder_width + col * tileSize + tileSize/2.0f;
+			float centerY = boarder_height + row * tileSize + tileSize/1.0f;
+
+			capSquare.setPosition(centerX , centerY);
+			if(checkCapture[row][col])
+				window.draw(capSquare);
+			
 						
 		}
 	}
-	
 }
 
 //func end
@@ -242,12 +252,31 @@ void clicked( RenderWindow& window ,char** board, int mouseX , int mouseY , bool
 		// pawn
 		if (board[mouseY][mouseX] == 'P') {
 			last_clicked_piece = 'P';
-			if( board[mouseY-1][mouseX] == ' ' ){
+			if( board[mouseY-1][mouseX] == ' '){
 				board[mouseY-1][mouseX] = 'O';
 				if(board[mouseY-2][mouseX] == ' ' && mouseY == 6 )
 					board[mouseY-2][mouseX] = 'O';
 			}
-				
+			
+			switch( board[mouseY-1][mouseX-1]){
+				case 'p':
+ 				case 'q':
+ 				case 'b':
+ 				case 'r':
+ 				case 'k':
+ 				case 'n':
+					checkCapture[mouseY-1][mouseX-1] = true;
+			}
+			
+			switch( board[mouseY-1][mouseX+1]){
+				case 'p':
+ 				case 'q':
+ 				case 'b':
+ 				case 'r':
+ 				case 'k':
+ 				case 'n':
+					checkCapture[mouseY-1][mouseX+1] = true;
+			}	
 
 		}
 
@@ -881,7 +910,7 @@ void clicked( RenderWindow& window ,char** board, int mouseX , int mouseY , bool
 		}
 	}
 
-	// ------------------- KAALA -----------------
+	// ------------------------------------------------------------------------------------ KAALA ---------------------------------------------------------------
 	if(turn == 0){
 		// pawn
 		if (board[mouseY][mouseX] == 'p') {
@@ -893,6 +922,26 @@ void clicked( RenderWindow& window ,char** board, int mouseX , int mouseY , bool
 					board[mouseY-2][mouseX] = 'O';
 			}
 		
+			
+			switch( board[mouseY-1][mouseX-1]){
+				case 'P':
+ 				case 'Q':
+ 				case 'B':
+ 				case 'R':
+ 				case 'K':
+ 				case 'N':
+					checkCapture[mouseY-1][mouseX-1] = true;
+			}
+			
+			switch( board[mouseY-1][mouseX+1]){
+				case 'P':
+ 				case 'Q':
+ 				case 'B':
+ 				case 'R':
+ 				case 'K':
+ 				case 'N':
+					checkCapture[mouseY-1][mouseX+1] = true;
+			}
 		}
 
 		// rook
@@ -1554,6 +1603,7 @@ int main(){
 	
 	for(int i=0 ; i<height ; i++){
 		for(int j=0 ; j<width ; j++){
+				checkCapture[i][j] = 0;
 				board[i][j]=' ';
 				//CAPITAL FOR WHITE
 				if(i == 1){
