@@ -173,7 +173,7 @@ void display_board(RenderWindow& window, char** board , bool checkCapture[8][8])
 			
 			
 			float centerX = boarder_width + col * tileSize + tileSize/2.0f;
-			float centerY = boarder_height + row * tileSize + tileSize/1.0f;
+			float centerY = boarder_height + row * tileSize ;
 
 			capSquare.setPosition(centerX , centerY);
 			if(checkCapture[row][col])
@@ -206,8 +206,8 @@ void clicked( RenderWindow& window ,char** board, int mouseX , int mouseY , bool
 		//deleting old valid move
 		for(int i=0 ; i<height ; i++){
 			for(int j=0 ; j<width ; j++){
-				if(board[i][j] == 'O')
-					board[i][j] = ' ';
+				if(board[i][j] == 'O')		board[i][j] = ' ';
+					checkCapture[i][j] = false;
 				}
 			}
 		
@@ -242,9 +242,8 @@ void clicked( RenderWindow& window ,char** board, int mouseX , int mouseY , bool
 	//deleting old valid move and capture
 	for(int i=0 ; i<height ; i++){
 		for(int j=0 ; j<width ; j++){
-			if(board[i][j] == 'O')
-				board[i][j] = ' ';
-				checkCapture[i][j] = 0;
+			if(board[i][j] == 'O')		board[i][j] = ' ';
+				checkCapture[i][j] = false;
 			}
 		}
 	
@@ -890,21 +889,125 @@ void clicked( RenderWindow& window ,char** board, int mouseX , int mouseY , bool
 		last_clicked_piece = 'K';
 		
 		
-			if(mouseX-1 >= 0  &&  board[mouseY][mouseX-1] == ' ') 					board[mouseY][mouseX-1] = 'O';
+			if(mouseX-1 >= 0 ){
+				switch(board[mouseY][mouseX-1]){
+					case ' ':
+	 					board[mouseY][mouseX-1] = 'O';
+	 					break;
+	 				case 'p':
+	 				case 'q':
+	 				case 'b':
+	 				case 'r':
+	 				case 'k':
+	 				case 'n':
+	 					checkCapture[mouseY][mouseX-1] = true;
+	 					}
+					}
+								
+			if(mouseX+1 < width){
+				switch(board[mouseY][mouseX+1]){
+					case ' ':
+	 					board[mouseY][mouseX+1] = 'O';
+	 					break;
+	 				case 'p':
+	 				case 'q':
+	 				case 'b':
+	 				case 'r':
+	 				case 'k':
+	 				case 'n':
+	 					checkCapture[mouseY][mouseX+1] = true;
+	 					}
+					}	
 			
-			if(mouseX+1 < width  &&  board[mouseY][mouseX+1] == ' ') 				board[mouseY][mouseX+1] = 'O';
+			if(mouseY-1 >= 0 ){
+				switch(board[mouseY-1][mouseX]){
+					case ' ':
+	 					board[mouseY-1][mouseX] = 'O';
+	 					break;
+	 				case 'p':
+	 				case 'q':
+	 				case 'b':
+	 				case 'r':
+	 				case 'k':
+	 				case 'n':
+	 					checkCapture[mouseY-1][mouseX] = true;
+	 					}
+					}
 			
-			if(mouseY-1 >= 0  &&  board[mouseY-1][mouseX] == ' ') 					board[mouseY-1][mouseX] = 'O';
+			if(mouseY+1 < height ){
+				switch(board[mouseY+1][mouseX]){
+					case ' ':
+	 					board[mouseY+1][mouseX] = 'O';
+	 					break;
+	 				case 'p':
+	 				case 'q':
+	 				case 'b':
+	 				case 'r':
+	 				case 'k':
+	 				case 'n':
+	 					checkCapture[mouseY+1][mouseX] = true;
+	 					}
+					}
 			
-			if(mouseY+1 < height  &&  board[mouseY+1][mouseX] == ' ') 				board[mouseY+1][mouseX] = 'O';
+			if(mouseY+1 < height ){
+				switch(board[mouseY+1][mouseX-1]){
+					case ' ':
+	 					board[mouseY+1][mouseX-1] = 'O';
+	 					break;
+	 				case 'p':
+	 				case 'q':
+	 				case 'b':
+	 				case 'r':
+	 				case 'k':
+	 				case 'n':
+	 					checkCapture[mouseY+1][mouseX-1] = true;
+	 					}
+					}
 			
-			if(mouseY+1 < height  &&  mouseX-1 >= 0  &&  board[mouseY+1][mouseX-1] == ' ') 		board[mouseY+1][mouseX-1] = 'O';
+			if(mouseY+1 < height  ){
+				switch(board[mouseY+1][mouseX+1]){
+					case ' ':
+	 					board[mouseY+1][mouseX+1] = 'O';
+	 					break;
+	 				case 'P':
+	 				case 'Q':
+	 				case 'B':
+	 				case 'R':
+	 				case 'K':
+	 				case 'N':
+	 					checkCapture[mouseY+1][mouseX+1] = true;
+	 					}
+					}
 			
-			if(mouseY+1 < height  &&  mouseX+1 < width  &&  board[mouseY+1][mouseX+1] == ' ') 	board[mouseY+1][mouseX+1] = 'O';
-			
-			if(mouseY-1 >= 0  &&  mouseX-1 >= 0  &&  board[mouseY-1][mouseX-1] == ' ') 		board[mouseY-1][mouseX-1] = 'O';
+			if(mouseY-1 >= 0 ){
+				switch(board[mouseY-1][mouseX-1]){
+					case ' ':
+	 					board[mouseY-1][mouseX-1] = 'O';
+	 					break;
+	 				case 'p':
+	 				case 'q':
+	 				case 'b':
+	 				case 'r':
+	 				case 'k':
+	 				case 'n':
+	 					checkCapture[mouseY-1][mouseX-1] = true;
+	 					}
+					}
 		
-			if(mouseY-1 >= 0  &&  mouseX+1 < width  &&  board[mouseY-1][mouseX+1] == ' ') 		board[mouseY-1][mouseX+1] = 'O';
+			if(mouseY-1 >= 0){
+				switch(board[mouseY-1][mouseX+1]){
+					case ' ':
+	 					board[mouseY-1][mouseX+1] = 'O';
+	 					break;
+	 				case 'p':
+	 				case 'q':
+	 				case 'b':
+	 				case 'r':
+	 				case 'k':
+	 				case 'n':
+	 					checkCapture[mouseY-1][mouseX+1] = true;
+	 					}
+					}
 		
 		
 		}
@@ -1555,21 +1658,125 @@ void clicked( RenderWindow& window ,char** board, int mouseX , int mouseY , bool
 		if (board[mouseY][mouseX] == 'k') {
 		last_clicked_piece = 'k';
 		
-			if(mouseX-1 >= 0  &&  board[mouseY][mouseX-1] == ' ') 					board[mouseY][mouseX-1] = 'O';
+			if(mouseX-1 >= 0 ){
+				switch(board[mouseY][mouseX-1]){
+					case ' ':
+	 					board[mouseY][mouseX-1] = 'O';
+	 					break;
+	 				case 'P':
+	 				case 'Q':
+	 				case 'B':
+	 				case 'R':
+	 				case 'K':
+	 				case 'N':
+	 					checkCapture[mouseY][mouseX-1] = true;
+	 					}
+					}
+								
+			if(mouseX+1 < width){
+				switch(board[mouseY][mouseX+1]){
+					case ' ':
+	 					board[mouseY][mouseX+1] = 'O';
+	 					break;
+	 				case 'P':
+	 				case 'Q':
+	 				case 'B':
+	 				case 'R':
+	 				case 'K':
+	 				case 'N':
+	 					checkCapture[mouseY][mouseX+1] = true;
+	 					}
+					}	
 			
-			if(mouseX+1 < width  &&  board[mouseY][mouseX+1] == ' ') 				board[mouseY][mouseX+1] = 'O';
+			if(mouseY-1 >= 0 ){
+				switch(board[mouseY-1][mouseX]){
+					case ' ':
+	 					board[mouseY-1][mouseX] = 'O';
+	 					break;
+	 				case 'P':
+	 				case 'Q':
+	 				case 'B':
+	 				case 'R':
+	 				case 'K':
+	 				case 'N':
+	 					checkCapture[mouseY-1][mouseX] = true;
+	 					}
+					}
 			
-			if(mouseY-1 >= 0  &&  board[mouseY-1][mouseX] == ' ') 					board[mouseY-1][mouseX] = 'O';
+			if(mouseY+1 < height ){
+				switch(board[mouseY+1][mouseX]){
+					case ' ':
+	 					board[mouseY+1][mouseX] = 'O';
+	 					break;
+	 				case 'P':
+	 				case 'Q':
+	 				case 'B':
+	 				case 'R':
+	 				case 'K':
+	 				case 'N':
+	 					checkCapture[mouseY+1][mouseX] = true;
+	 					}
+					}
 			
-			if(mouseY+1 < height  &&  board[mouseY+1][mouseX] == ' ') 				board[mouseY+1][mouseX] = 'O';
+			if(mouseY+1 < height ){
+				switch(board[mouseY+1][mouseX-1]){
+					case ' ':
+	 					board[mouseY+1][mouseX-1] = 'O';
+	 					break;
+	 				case 'P':
+	 				case 'Q':
+	 				case 'B':
+	 				case 'R':
+	 				case 'K':
+	 				case 'N':
+	 					checkCapture[mouseY+1][mouseX-1] = true;
+	 					}
+					}
 			
-			if(mouseY+1 < height  &&  mouseX-1 >= 0  &&  board[mouseY+1][mouseX-1] == ' ') 		board[mouseY+1][mouseX-1] = 'O';
+			if(mouseY+1 < height  ){
+				switch(board[mouseY+1][mouseX+1]){
+					case ' ':
+	 					board[mouseY+1][mouseX+1] = 'O';
+	 					break;
+	 				case 'P':
+	 				case 'Q':
+	 				case 'B':
+	 				case 'R':
+	 				case 'K':
+	 				case 'N':
+	 					checkCapture[mouseY+1][mouseX+1] = true;
+	 					}
+					}
 			
-			if(mouseY+1 < height  &&  mouseX+1 < width  &&  board[mouseY+1][mouseX+1] == ' ') 	board[mouseY+1][mouseX+1] = 'O';
-			
-			if(mouseY-1 >= 0  &&  mouseX-1 >= 0  &&  board[mouseY-1][mouseX-1] == ' ') 		board[mouseY-1][mouseX-1] = 'O';
+			if(mouseY-1 >= 0 ){
+				switch(board[mouseY-1][mouseX-1]){
+					case ' ':
+	 					board[mouseY-1][mouseX-1] = 'O';
+	 					break;
+	 				case 'P':
+	 				case 'Q':
+	 				case 'B':
+	 				case 'R':
+	 				case 'K':
+	 				case 'N':
+	 					checkCapture[mouseY-1][mouseX-1] = true;
+	 					}
+					}
 		
-			if(mouseY-1 >= 0  &&  mouseX+1 < width  &&  board[mouseY-1][mouseX+1] == ' ') 		board[mouseY-1][mouseX+1] = 'O';
+			if(mouseY-1 >= 0){
+				switch(board[mouseY-1][mouseX+1]){
+					case ' ':
+	 					board[mouseY-1][mouseX+1] = 'O';
+	 					break;
+	 				case 'P':
+	 				case 'Q':
+	 				case 'B':
+	 				case 'R':
+	 				case 'K':
+	 				case 'N':
+	 					checkCapture[mouseY-1][mouseX+1] = true;
+	 					}
+					}
 
 
 		}
@@ -1662,6 +1869,11 @@ int main(){
 	Event ev;
 	//game loop
 	while(window.isOpen()){
+	
+		//check dettection!!! both king all the time
+		
+		
+		
 		while (window.pollEvent(ev))
 		{
 			if (ev.type == Event::Closed) 
