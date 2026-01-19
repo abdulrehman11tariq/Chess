@@ -31,13 +31,14 @@ void display_board(RenderWindow& window, char** board , bool checkCapture[8][8])
 	
 	
 	//Square for capture display
-	CircleShape capSquare(tileSize/2 , 4);	
+	CircleShape capSquare(tileSize*0.5f , 4);	
 	
 	//clr
-	capSquare.setFillColor(Color(120,120,120,170));
+	capSquare.setFillColor(Color::Transparent);
+	capSquare.setOutlineColor(Color::Red);
+	capSquare.setOutlineThickness(4.0f);
 	capSquare.setRotation(45);
-	capSquare.setOrigin(0,0);
-		
+			
 	
 	//SPRITES FOR WHITE GOTTI
 	static Texture WpawnTex;
