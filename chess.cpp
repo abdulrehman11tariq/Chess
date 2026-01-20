@@ -188,6 +188,132 @@ void display_board(RenderWindow& window, char** board , bool checkCapture[8][8])
 //func end
 
 
+//check detection
+void check_det( bool turn , char board[8][8] , bool& isCheck){
+	
+	char king = turn ? 'K' : 'k';
+	int kingX=0 , kingY=0;
+	
+	for(int i=0 ; i<height ; i++){
+		for(int j=0 ; j<width ;j++){
+			if(board[i][j] == king){
+				kingY=i;
+				kingX=j;
+				break;
+				}
+			}
+		}
+		
+	int pcsCorrection = turn ? 'a' - 'A' : 0 ;
+	
+	
+	//pawn check
+	if(board[kingY-1][kingX+1] == 'P' + pcsCorrection){
+		isCheck = true;
+		return;
+	}
+	
+	if(board[kingY-1][kingX-1] == 'P' + pcsCorrection){
+		isCheck = true;
+		return;
+	}
+	
+	
+	//bishop
+	for(int i=1 ; i<height ; i++){
+		if(kingY + i < height && kingX + i < width ){
+			if(board[kingY+i][kingX+i] == 'B' + pcsCorrection || board[kingY+i][kingX+i] == 'Q' + pcsCorrection){
+				isCheck = true;
+				return;
+			}
+			
+			else if(board[kingY+i][kingX+i] != ' ') break;
+		}
+	}
+	
+	for(int i=1 ; i<height ; i++){
+		if(kingY + i < height && kingX - i >= 0 ){
+			if(board[kingY+i][kingX-i] == 'B' + pcsCorrection || board[kingY+i][kingX-i] == 'Q' + pcsCorrection){
+				isCheck = true;
+				return;
+			}
+			
+			else if(board[kingY+i][kingX-i] != ' ') break;
+		}
+	}
+	
+	for(int i=1 ; i<height ; i++){
+		if(kingY - i >= 0 && kingX + i < width ){
+			if(board[kingY-i][kingX+i] == 'B' + pcsCorrection || board[kingY-i][kingX+i] == 'Q' + pcsCorrection){
+				isCheck = true;
+				return;
+			}
+			
+			else if(board[kingY-i][kingX+i] != ' ') break;
+		}
+	}
+	
+	for(int i=1 ; i<height ; i++){
+		if(kingY - i >= 0 && kingX - i >= 0 ){
+			if(board[kingY-i][kingX-i] == 'B' + pcsCorrection || board[kingY-i][kingX-i] == 'Q' + pcsCorrection){
+				isCheck = true;
+				return;
+			}
+			
+			else if(board[kingY-i][kingX-i] != ' ') break;
+		}
+	}
+	
+	//rook
+	for(int i=1 ; i<height ; i++){
+		if(kingY + i < height){
+			if(board[kingY+i][kingX] == 'R' + pcsCorrection || board[kingY+i][kingX] == 'Q' + pcsCorrection){
+				isCheck = true;
+				return;
+			}
+			
+			else if(board[kingY+i][kingX] != ' ') break;
+		}
+	}
+	
+	for(int i=1 ; i<height ; i++){
+		if(kingY - i >= 0){
+			if(board[kingY-i][kingX] == 'R' + pcsCorrection || board[kingY-i][kingX] == 'Q' + pcsCorrection){
+				isCheck = true;
+				return;
+			}
+			
+			else if(board[kingY-i][kingX] != ' ') break;
+		}
+	}
+	
+	for(int i=1 ; i<height ; i++){
+		if(kingX + i < height){
+			if(board[kingY][kingX+i] == 'R' + pcsCorrection || board[kingY][kingX+i] == 'Q' + pcsCorrection){
+				isCheck = true;
+				return;
+			}
+			
+			else if(board[kingY][kingX+i] != ' ') break;
+		}
+	}
+	
+	for(int i=1 ; i<height ; i++){
+		if(kingX - i >= 0){
+			if(board[kingY][kingX-i] == 'R' + pcsCorrection || board[kingY][kingX-i] == 'Q' + pcsCorrection){
+				isCheck = true;
+				return;
+			}
+			
+			else if(board[kingY][kingX-i] != ' ') break;
+		}
+	}
+	
+	//knight
+	
+	
+}
+
 //new func 
 void clicked( RenderWindow& window ,char** board, int mouseX , int mouseY , bool& mouseClicked , bool& turn, bool checkCapture[8][8]){
 	static int last_mouseY = 0 , last_mouseX = 0 ;
@@ -970,12 +1096,12 @@ void clicked( RenderWindow& window ,char** board, int mouseX , int mouseY , bool
 					case ' ':
 	 					board[mouseY+1][mouseX+1] = 'O';
 	 					break;
-	 				case 'P':
-	 				case 'Q':
-	 				case 'B':
-	 				case 'R':
-	 				case 'K':
-	 				case 'N':
+	 				case 'p':
+	 				case 'q':
+	 				case 'b':
+	 				case 'r':
+	 				case 'k':
+	 				case 'n':
 	 					checkCapture[mouseY+1][mouseX+1] = true;
 	 					}
 					}
