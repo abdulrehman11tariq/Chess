@@ -16,7 +16,7 @@ const int window_width  = 1050;
 const int boarder_width = 33*1.5;
 const int boarder_height = 33*1.5;
 
-void display_board(RenderWindow& window, char** board , bool checkCapture[8][8]){
+void display_board(RenderWindow& window, char** board , bool checkCapture[height][width]){
 	
 	//Circle for Move Display
 	float tileSize = (window_width - 2 * boarder_width) / width;
