@@ -16,7 +16,7 @@ const int window_width  = 1050;
 const int boarder_width = 33*1.5;
 const int boarder_height = 33*1.5;
 
-void display_board(RenderWindow& window, char** board , bool checkCapture[height][width]){
+void display_board(RenderWindow& window, char** board , bool checkCapture[height][width], bool wCheck, bool bCheck){
 	
 	//Circle for Move Display
 	float tileSize = (window_width - 2 * boarder_width) / width;
@@ -104,6 +104,25 @@ void display_board(RenderWindow& window, char** board , bool checkCapture[height
 	BkingSprite.setScale(2,2);
 	
 	
+	// RED HIGHLIGHT on king tile when in check
+	float tileS = (window_width - 2 * boarder_width) / width;
+	RectangleShape checkHighlight(Vector2f(tileS, tileS));
+	checkHighlight.setFillColor(Color(220, 50, 50, 140));
+	checkHighlight.setOutlineColor(Color(255, 0, 0, 255));
+	checkHighlight.setOutlineThickness(4.0f);
+
+	for(int row = 0; row < 8; row++){
+		for(int col = 0; col < 8; col++){
+			char p = board[row][col];
+			if( (wCheck && p == 'K') || (bCheck && p == 'k') ){
+				float px = boarder_width + col * tileS;
+				float py = boarder_height + row * tileS;
+				checkHighlight.setPosition(px, py);
+				window.draw(checkHighlight);
+			}
+		}
+	}
+
 	for(int row = 0; row < 8; row++){
 		for(int col = 0; col < 8; col++){
 			char piece = board[row][col];
@@ -2046,6 +2065,8 @@ int main(){
 	
 	
 	bool checkCapture[8][8];
+	bool whiteInCheck = false;
+	bool blackInCheck = false;
 	
 	char **board = new char* [height];
 	for(int i=0 ; i<height ; i++){
@@ -2115,7 +2136,10 @@ int main(){
 	while(window.isOpen()){
 	
 		//check dettection!!! both king all the time
-		
+		whiteInCheck = false;
+		blackInCheck = false;
+		check_det(true,  board, whiteInCheck);
+		check_det(false, board, blackInCheck);
 		
 		
 		while (window.pollEvent(ev))
@@ -2151,7 +2175,7 @@ int main(){
 		window.draw(bgSprite);
 		
 		//calling functions
-		display_board(window, board , checkCapture);	
+		display_board(window, board , checkCapture, whiteInCheck, blackInCheck);	
 		
 		
 		
