@@ -450,6 +450,36 @@ void check_det( bool turn , char** board , bool& isCheck){
 	}
 }
 
+//pin detection for white piece at (pieceY, pieceX)
+//temporarily removes the piece and checks if white king is in check
+bool is_pinned_white(char** board, int pieceY, int pieceX){
+	
+	char saved = board[pieceY][pieceX];
+	board[pieceY][pieceX] = ' ';
+	
+	bool kingInCheck = false;
+	check_det(true, board, kingInCheck);
+	
+	board[pieceY][pieceX] = saved;
+	
+	return kingInCheck;
+}
+
+//pin detection for black piece at (pieceY, pieceX)
+//temporarily removes the piece and checks if black king is in check
+bool is_pinned_black(char** board, int pieceY, int pieceX){
+	
+	char saved = board[pieceY][pieceX];
+	board[pieceY][pieceX] = ' ';
+	
+	bool kingInCheck = false;
+	check_det(false, board, kingInCheck);
+	
+	board[pieceY][pieceX] = saved;
+	
+	return kingInCheck;
+}
+
 //new func 
 void clicked( RenderWindow& window ,char** board, int mouseX , int mouseY , bool& mouseClicked , bool& turn, bool checkCapture[8][8]){
 	static int last_mouseY = 0 , last_mouseX = 0 ;
@@ -513,6 +543,7 @@ void clicked( RenderWindow& window ,char** board, int mouseX , int mouseY , bool
 	if(turn == 1){
 		// pawn
 		if (board[mouseY][mouseX] == 'P') {
+			if(is_pinned_white(board, mouseY, mouseX)) return;
 			last_clicked_piece = 'P';
 			if( board[mouseY-1][mouseX] == ' '){
 				board[mouseY-1][mouseX] = 'O';
@@ -544,6 +575,7 @@ void clicked( RenderWindow& window ,char** board, int mouseX , int mouseY , bool
 
 		// rook
 		if (board[mouseY][mouseX] == 'R') {
+			if(is_pinned_white(board, mouseY, mouseX)) return;
 		last_clicked_piece = 'R';
 			
 			//moves after that peice
@@ -658,6 +690,7 @@ void clicked( RenderWindow& window ,char** board, int mouseX , int mouseY , bool
 
 		// knight
 		if (board[mouseY][mouseX] == 'N') {
+			if(is_pinned_white(board, mouseY, mouseX)) return;
 		last_clicked_piece = 'N';
 			
 			
@@ -787,6 +820,7 @@ void clicked( RenderWindow& window ,char** board, int mouseX , int mouseY , bool
 
 		// bishop
 		if (board[mouseY][mouseX] == 'B') {
+			if(is_pinned_white(board, mouseY, mouseX)) return;
 		last_clicked_piece = 'B';
 
 			for(int i=1 ; i<height ; i++){
@@ -912,6 +946,7 @@ void clicked( RenderWindow& window ,char** board, int mouseX , int mouseY , bool
 
 		// queen
 		if (board[mouseY][mouseX] == 'Q') {
+			if(is_pinned_white(board, mouseY, mouseX)) return;
 		last_clicked_piece = 'Q';
 			
 		//all rook moves
@@ -1280,6 +1315,7 @@ void clicked( RenderWindow& window ,char** board, int mouseX , int mouseY , bool
 	if(turn == 0){
 		// pawn
 		if (board[mouseY][mouseX] == 'p') {
+			if(is_pinned_black(board, mouseY, mouseX)) return;
 		last_clicked_piece = 'p';
 			if( board[mouseY-1][mouseX] == ' ' ){
 				
@@ -1312,6 +1348,7 @@ void clicked( RenderWindow& window ,char** board, int mouseX , int mouseY , bool
 
 		// rook
 		if (board[mouseY][mouseX] == 'r') {
+			if(is_pinned_black(board, mouseY, mouseX)) return;
 		last_clicked_piece = 'r';
 			
 			//moves after that peice
@@ -1427,6 +1464,7 @@ void clicked( RenderWindow& window ,char** board, int mouseX , int mouseY , bool
 
 		// knight
 		if (board[mouseY][mouseX] == 'n') {
+			if(is_pinned_black(board, mouseY, mouseX)) return;
 		last_clicked_piece = 'n';
 		
 			if(mouseX-1 >= 0  &&  mouseY+2 < height){
@@ -1554,6 +1592,7 @@ void clicked( RenderWindow& window ,char** board, int mouseX , int mouseY , bool
 
 		// bishop
 		if (board[mouseY][mouseX] == 'b') {
+			if(is_pinned_black(board, mouseY, mouseX)) return;
 		last_clicked_piece = 'b';
 			
 			for(int i=1 ; i<height ; i++){
@@ -1679,6 +1718,7 @@ void clicked( RenderWindow& window ,char** board, int mouseX , int mouseY , bool
 
 		// queen
 		if (board[mouseY][mouseX] == 'q') {
+			if(is_pinned_black(board, mouseY, mouseX)) return;
 		last_clicked_piece = 'q';
 		
 		//all rook moves
