@@ -485,15 +485,46 @@ void clicked( RenderWindow& window ,char** board, int mouseX , int mouseY , bool
 	static int last_mouseY = 0 , last_mouseX = 0 ;
 	static char last_clicked_piece = ' ';
 	
+	//en passant tracking
+	//ep_active: was the last move a double pawn push?
+	//ep_col: column (after board rotation) where that pawn landed
+	static bool ep_active = false;
+	static int  ep_col    = -1;
+	
 	
 	//MOVE
 	//checking validity of move and then move it wuhahahahaha!!!!!!!!!!
 	if(board[mouseY][mouseX] == 'O' || checkCapture[mouseY][mouseX]){
 		
+		//-------- EN PASSANT CAPTURE detection --------
+		//if a pawn moved diagonally onto an empty 'O' square, it is an en passant capture
+		//the captured pawn is sitting one row below (row 3) at ep_col
+		bool isEnPassantCapture = false;
+		if(ep_active && board[mouseY][mouseX] == 'O' && mouseY == 2 && mouseX == ep_col){
+			if( (last_clicked_piece == 'P' || last_clicked_piece == 'p') && mouseX != last_mouseX ){
+				isEnPassantCapture = true;
+			}
+		}
 		
 		board[mouseY][mouseX] = last_clicked_piece;
 		board[last_mouseY][last_mouseX] = ' ';
 		
+		//remove the en passant captured pawn (it sits at row 3, same column)
+		if(isEnPassantCapture){
+			board[3][ep_col] = ' ';
+		}
+		
+		//-------- EN PASSANT STATE UPDATE --------
+		//check if a pawn just did a double push from row 6 to row 4
+		//after rotation the column flips: width-1-mouseX
+		if( (last_clicked_piece == 'P' || last_clicked_piece == 'p') && last_mouseY == 6 && mouseY == 4){
+			ep_active = true;
+			ep_col    = width - 1 - mouseX;  //column after board rotation
+		}
+		else{
+			ep_active = false;
+			ep_col    = -1;
+		}
 		
 		mouseClicked = false;
 		//deleting old valid move
@@ -570,6 +601,18 @@ void clicked( RenderWindow& window ,char** board, int mouseX , int mouseY , bool
  				case 'n':
 					checkCapture[mouseY-1][mouseX+1] = true;
 			}	
+			
+			//-------- EN PASSANT for white pawn --------
+			//the white pawn must be on row 3 (same rank as the enemy pawn that double-pushed)
+			//ep_col holds the column (after rotation) where the black pawn landed at row 3
+			if(ep_active && mouseY == 3){
+				if(mouseX - 1 == ep_col && mouseX - 1 >= 0 && board[3][ep_col] == 'p'){
+					board[2][ep_col] = 'O';
+				}
+				if(mouseX + 1 == ep_col && mouseX + 1 < width && board[3][ep_col] == 'p'){
+					board[2][ep_col] = 'O';
+				}
+			}
 
 		}
 
@@ -1344,6 +1387,18 @@ void clicked( RenderWindow& window ,char** board, int mouseX , int mouseY , bool
  				case 'N':
 					checkCapture[mouseY-1][mouseX+1] = true;
 			}
+			
+			//-------- EN PASSANT for black pawn --------
+			//same logic as white: black pawn must be on row 3, ep_col is the white pawn's column
+			if(ep_active && mouseY == 3){
+				if(mouseX - 1 == ep_col && mouseX - 1 >= 0 && board[3][ep_col] == 'P'){
+					board[2][ep_col] = 'O';
+				}
+				if(mouseX + 1 == ep_col && mouseX + 1 < width && board[3][ep_col] == 'P'){
+					board[2][ep_col] = 'O';
+				}
+			}
+
 		}
 
 		// rook
