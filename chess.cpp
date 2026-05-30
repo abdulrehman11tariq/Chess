@@ -235,7 +235,7 @@ void check_det( bool turn , char** board , bool& isCheck){
 		}
 	}
 	
-	if(kingY-1 >=0 && kingX-1 < width){
+	if(kingY-1 >=0 && kingX-1 >= 0){
 		if(board[kingY-1][kingX-1] == 'P' + pcsCorrection){
 			isCheck = true;
 			return;
@@ -482,6 +482,8 @@ bool is_pinned_black(char** board, int pieceY, int pieceX){
 
 //new func 
 void clicked( RenderWindow& window ,char** board, int mouseX , int mouseY , bool& mouseClicked , bool& turn, bool checkCapture[8][8]){
+	if (mouseX < 0 || mouseX >= width || mouseY < 0 || mouseY >= height) return;
+	
 	static int last_mouseY = 0 , last_mouseX = 0 ;
 	static char last_clicked_piece = ' ';
 	
@@ -576,31 +578,35 @@ void clicked( RenderWindow& window ,char** board, int mouseX , int mouseY , bool
 		if (board[mouseY][mouseX] == 'P') {
 			if(is_pinned_white(board, mouseY, mouseX)) return;
 			last_clicked_piece = 'P';
-			if( board[mouseY-1][mouseX] == ' '){
+			if( mouseY-1 >= 0 && board[mouseY-1][mouseX] == ' '){
 				board[mouseY-1][mouseX] = 'O';
-				if(board[mouseY-2][mouseX] == ' ' && mouseY == 6 )
+				if(mouseY == 6 && board[mouseY-2][mouseX] == ' ' )
 					board[mouseY-2][mouseX] = 'O';
 			}
 			
-			switch( board[mouseY-1][mouseX-1]){
-				case 'p':
- 				case 'q':
- 				case 'b':
- 				case 'r':
- 				case 'k':
- 				case 'n':
-					checkCapture[mouseY-1][mouseX-1] = true;
+			if (mouseY-1 >= 0 && mouseX-1 >= 0) {
+				switch( board[mouseY-1][mouseX-1]){
+					case 'p':
+	 				case 'q':
+	 				case 'b':
+	 				case 'r':
+	 				case 'k':
+	 				case 'n':
+						checkCapture[mouseY-1][mouseX-1] = true;
+				}
 			}
 			
-			switch( board[mouseY-1][mouseX+1]){
-				case 'p':
- 				case 'q':
- 				case 'b':
- 				case 'r':
- 				case 'k':
- 				case 'n':
-					checkCapture[mouseY-1][mouseX+1] = true;
-			}	
+			if (mouseY-1 >= 0 && mouseX+1 < width) {
+				switch( board[mouseY-1][mouseX+1]){
+					case 'p':
+	 				case 'q':
+	 				case 'b':
+	 				case 'r':
+	 				case 'k':
+	 				case 'n':
+						checkCapture[mouseY-1][mouseX+1] = true;
+				}	
+			}
 			
 			//-------- EN PASSANT for white pawn --------
 			//the white pawn must be on row 3 (same rank as the enemy pawn that double-pushed)
@@ -1360,32 +1366,35 @@ void clicked( RenderWindow& window ,char** board, int mouseX , int mouseY , bool
 		if (board[mouseY][mouseX] == 'p') {
 			if(is_pinned_black(board, mouseY, mouseX)) return;
 		last_clicked_piece = 'p';
-			if( board[mouseY-1][mouseX] == ' ' ){
+			if( mouseY-1 >= 0 && board[mouseY-1][mouseX] == ' ' ){
 				
 				board[mouseY-1][mouseX] = 'O';
-				if(board[mouseY-2][mouseX] == ' ' && mouseY == 6 )
+				if(mouseY == 6 && board[mouseY-2][mouseX] == ' ' )
 					board[mouseY-2][mouseX] = 'O';
 			}
 		
-			
-			switch( board[mouseY-1][mouseX-1]){
-				case 'P':
- 				case 'Q':
- 				case 'B':
- 				case 'R':
- 				case 'K':
- 				case 'N':
-					checkCapture[mouseY-1][mouseX-1] = true;
+			if (mouseY-1 >= 0 && mouseX-1 >= 0) {
+				switch( board[mouseY-1][mouseX-1]){
+					case 'P':
+	 				case 'Q':
+	 				case 'B':
+	 				case 'R':
+	 				case 'K':
+	 				case 'N':
+						checkCapture[mouseY-1][mouseX-1] = true;
+				}
 			}
 			
-			switch( board[mouseY-1][mouseX+1]){
-				case 'P':
- 				case 'Q':
- 				case 'B':
- 				case 'R':
- 				case 'K':
- 				case 'N':
-					checkCapture[mouseY-1][mouseX+1] = true;
+			if (mouseY-1 >= 0 && mouseX+1 < width) {
+				switch( board[mouseY-1][mouseX+1]){
+					case 'P':
+	 				case 'Q':
+	 				case 'B':
+	 				case 'R':
+	 				case 'K':
+	 				case 'N':
+						checkCapture[mouseY-1][mouseX+1] = true;
+				}
 			}
 			
 			//-------- EN PASSANT for black pawn --------
@@ -2076,62 +2085,62 @@ void clicked( RenderWindow& window ,char** board, int mouseX , int mouseY , bool
 	 					}
 					}
 			
-			if(mouseY+1 < height ){
+			if(mouseY+1 < height && mouseX-1 >= 0){
 				switch(board[mouseY+1][mouseX-1]){
 					case ' ':
 	 					board[mouseY+1][mouseX-1] = 'O';
 	 					break;
-	 				case 'P':
-	 				case 'Q':
-	 				case 'B':
-	 				case 'R':
-	 				case 'K':
-	 				case 'N':
+					case 'P':
+					case 'Q':
+					case 'B':
+					case 'R':
+					case 'K':
+					case 'N':
 	 					checkCapture[mouseY+1][mouseX-1] = true;
 	 					}
 					}
 			
-			if(mouseY+1 < height  ){
+			if(mouseY+1 < height && mouseX+1 < width){
 				switch(board[mouseY+1][mouseX+1]){
 					case ' ':
 	 					board[mouseY+1][mouseX+1] = 'O';
 	 					break;
-	 				case 'P':
-	 				case 'Q':
-	 				case 'B':
-	 				case 'R':
-	 				case 'K':
-	 				case 'N':
+					case 'P':
+					case 'Q':
+					case 'B':
+					case 'R':
+					case 'K':
+					case 'N':
 	 					checkCapture[mouseY+1][mouseX+1] = true;
 	 					}
 					}
 			
-			if(mouseY-1 >= 0 ){
+			if(mouseY-1 >= 0 && mouseX-1 >= 0){
 				switch(board[mouseY-1][mouseX-1]){
 					case ' ':
 	 					board[mouseY-1][mouseX-1] = 'O';
 	 					break;
-	 				case 'P':
-	 				case 'Q':
-	 				case 'B':
-	 				case 'R':
-	 				case 'K':
-	 				case 'N':
+					case 'P':
+					case 'Q':
+					case 'B':
+					case 'R':
+					case 'K':
+					case 'N':
 	 					checkCapture[mouseY-1][mouseX-1] = true;
 	 					}
 					}
 		
-			if(mouseY-1 >= 0){
+			if(mouseY-1 >= 0 && mouseX+1 < width){
 				switch(board[mouseY-1][mouseX+1]){
 					case ' ':
 	 					board[mouseY-1][mouseX+1] = 'O';
 	 					break;
-	 				case 'P':
-	 				case 'Q':
-	 				case 'B':
-	 				case 'R':
-	 				case 'K':
-	 				case 'N':
+					case 'P':
+					case 'Q':
+					case 'B':
+					case 'R':
+					case 'K':
+					case 'N':
 	 					checkCapture[mouseY-1][mouseX+1] = true;
 	 					}
 					}
