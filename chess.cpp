@@ -493,6 +493,16 @@ void clicked( RenderWindow& window ,char** board, int mouseX , int mouseY , bool
 	static bool ep_active = false;
 	static int  ep_col    = -1;
 	
+	//-------- CASTLING TRACKING --------
+	//these flags track if the king or rooks have ever moved
+	//white uses W prefix, black uses B prefix
+	static bool wKingMoved  = false;
+	static bool wRookKMoved = false; //white kingside  rook (col 7 before rotation)
+	static bool wRookQMoved = false; //white queenside rook (col 0 before rotation)
+	static bool bKingMoved  = false;
+	static bool bRookKMoved = false; //black kingside  rook
+	static bool bRookQMoved = false;
+	
 	
 	//MOVE
 	//checking validity of move and then move it wuhahahahaha!!!!!!!!!!
@@ -508,12 +518,51 @@ void clicked( RenderWindow& window ,char** board, int mouseX , int mouseY , bool
 			}
 		}
 		
+		//-------- CASTLING EXECUTION --------
+		//if king moves 2 squares horizontally it must be a castling move
+		//move the corresponding rook as well
+		if(last_clicked_piece == 'K' && last_mouseY == 7 && last_mouseX == 4){
+			if(mouseY == 7 && mouseX == 6){
+				//kingside castling: move rook from col 7 to col 5
+				board[7][5] = 'R';
+				board[7][7] = ' ';
+			}
+			if(mouseY == 7 && mouseX == 2){
+				//queenside castling: move rook from col 0 to col 3
+				board[7][3] = 'R';
+				board[7][0] = ' ';
+			}
+		}
+		if(last_clicked_piece == 'k' && last_mouseY == 7 && last_mouseX == 4){
+			if(mouseY == 7 && mouseX == 6){
+				board[7][5] = 'r';
+				board[7][7] = ' ';
+			}
+			if(mouseY == 7 && mouseX == 2){
+				board[7][3] = 'r';
+				board[7][0] = ' ';
+			}
+		}
+		
 		board[mouseY][mouseX] = last_clicked_piece;
 		board[last_mouseY][last_mouseX] = ' ';
 		
 		//remove the en passant captured pawn (it sits at row 3, same column)
 		if(isEnPassantCapture){
 			board[3][ep_col] = ' ';
+		}
+		
+		//-------- CASTLING FLAG UPDATES --------
+		//track if king or rooks have moved so castling rights are lost
+		if(turn == 1){
+			if(last_clicked_piece == 'K')                             wKingMoved  = true;
+			if(last_clicked_piece == 'R' && last_mouseX == 7 && last_mouseY == 7) wRookKMoved = true;
+			if(last_clicked_piece == 'R' && last_mouseX == 0 && last_mouseY == 7) wRookQMoved = true;
+		}
+		else{
+			if(last_clicked_piece == 'k')                             bKingMoved  = true;
+			if(last_clicked_piece == 'r' && last_mouseX == 7 && last_mouseY == 7) bRookKMoved = true;
+			if(last_clicked_piece == 'r' && last_mouseX == 0 && last_mouseY == 7) bRookQMoved = true;
 		}
 		
 		//-------- EN PASSANT STATE UPDATE --------
@@ -1356,6 +1405,21 @@ void clicked( RenderWindow& window ,char** board, int mouseX , int mouseY , bool
 	 					}
 					}
 		
+			//-------- CASTLING for WHITE king --------
+			//king must be on its starting square (row 7, col 4) and not have moved
+			//the path squares must be empty, and the rook must not have moved
+			if(mouseY == 7 && mouseX == 4 && !wKingMoved){
+				
+				//kingside: col 5 and col 6 must be empty, rook at col 7 must not have moved
+				if(!wRookKMoved && board[7][7] == 'R' && board[7][5] == ' ' && board[7][6] == ' '){
+					board[7][6] = 'O';
+				}
+				
+				//queenside: col 3, col 2, col 1 must be empty, rook at col 0 must not have moved
+				if(!wRookQMoved && board[7][0] == 'R' && board[7][3] == ' ' && board[7][2] == ' ' && board[7][1] == ' '){
+					board[7][2] = 'O';
+				}
+			}
 		
 		}
 	}
@@ -2145,6 +2209,20 @@ void clicked( RenderWindow& window ,char** board, int mouseX , int mouseY , bool
 	 					}
 					}
 
+			//-------- CASTLING for BLACK king --------
+			//same logic as white but uses bKingMoved / bRookKMoved / bRookQMoved
+			if(mouseY == 7 && mouseX == 4 && !bKingMoved){
+				
+				//kingside
+				if(!bRookKMoved && board[7][7] == 'r' && board[7][5] == ' ' && board[7][6] == ' '){
+					board[7][6] = 'O';
+				}
+				
+				//queenside
+				if(!bRookQMoved && board[7][0] == 'r' && board[7][3] == ' ' && board[7][2] == ' ' && board[7][1] == ' '){
+					board[7][2] = 'O';
+				}
+			}
 
 		}
 	}
