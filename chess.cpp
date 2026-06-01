@@ -2236,6 +2236,18 @@ void clicked( RenderWindow& window ,char** board, int mouseX , int mouseY , bool
 	
 //func end
 
+// Returns true when the only pieces left on the board are the two kings
+bool is_king_vs_king(char** board){
+	for(int i = 0; i < height; i++){
+		for(int j = 0; j < width; j++){
+			char p = board[i][j];
+			if(p != ' ' && p != 'K' && p != 'k' && p != 'O')
+				return false;
+		}
+	}
+	return true;
+}
+
 int main(){
 	
 	Texture bgTexture;
@@ -2305,6 +2317,7 @@ int main(){
 	int x=0 , y=0;
 	bool mouseClicked=false;
 	bool turn = 1; //1 for White --- 0 for Black
+	bool isDraw = false;
 	
 	
 	
@@ -2352,23 +2365,64 @@ int main(){
 			window.close();
 		}
 		
+		// King vs King draw check
+		isDraw = is_king_vs_king(board);
+		
 		window.clear();
 		//background
 		window.draw(bgSprite);
 		
 		//calling functions
-		display_board(window, board , checkCapture, whiteInCheck, blackInCheck);	
+		display_board(window, board , checkCapture, whiteInCheck, blackInCheck);
 		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
+		// -------- DRAW OVERLAY --------
+		if(isDraw){
+			// Dark semi-transparent overlay
+			RectangleShape overlay(Vector2f(window_width, window_height));
+			overlay.setFillColor(Color(0, 0, 0, 170));
+			window.draw(overlay);
+			
+			// "DRAW" banner box
+			RectangleShape banner(Vector2f(560, 180));
+			banner.setOrigin(280, 90);
+			banner.setPosition(window_width / 2.f, window_height / 2.f - 40);
+			banner.setFillColor(Color(30, 30, 30, 230));
+			banner.setOutlineColor(Color(200, 200, 200, 255));
+			banner.setOutlineThickness(3.f);
+			window.draw(banner);
+			
+			// "DRAW" text
+			static Font drawFont;
+			static bool fontLoaded = false;
+			if(!fontLoaded){
+				// Try common system fonts; fall back gracefully if none found
+				if(!drawFont.loadFromFile("C:/Windows/Fonts/arialbd.ttf"))
+					drawFont.loadFromFile("C:/Windows/Fonts/arial.ttf");
+				fontLoaded = true;
+			}
+			
+			Text drawText;
+			drawText.setFont(drawFont);
+			drawText.setString("DRAW");
+			drawText.setCharacterSize(100);
+			drawText.setFillColor(Color(220, 220, 220, 255));
+			drawText.setStyle(Text::Bold);
+			FloatRect tb = drawText.getLocalBounds();
+			drawText.setOrigin(tb.left + tb.width/2.f, tb.top + tb.height/2.f);
+			drawText.setPosition(window_width / 2.f, window_height / 2.f - 55);
+			window.draw(drawText);
+			
+			// subtitle
+			Text subText;
+			subText.setFont(drawFont);
+			subText.setString("King vs King  -  Insufficient Material");
+			subText.setCharacterSize(26);
+			subText.setFillColor(Color(180, 180, 180, 210));
+			FloatRect sb = subText.getLocalBounds();
+			subText.setOrigin(sb.left + sb.width/2.f, sb.top + sb.height/2.f);
+			subText.setPosition(window_width / 2.f, window_height / 2.f + 55);
+			window.draw(subText);
+		}
 		
 		window.display();
 	}
