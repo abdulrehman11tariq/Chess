@@ -1405,6 +1405,45 @@ void clicked( RenderWindow& window ,char** board, int mouseX , int mouseY , bool
 	 					}
 					}
 		
+			//-------- FILTER OUT KING MOVES THAT LAND IN CHECK --------
+			//for each of the 8 surrounding squares, simulate the king moving there
+			//and check if the king would be in check; if so, remove that move
+			{
+				int dirs[8][2] = {{0,-1},{0,1},{-1,0},{1,0},{1,-1},{1,1},{-1,-1},{-1,1}};
+				for(int d=0; d<8; d++){
+					int ty = mouseY + dirs[d][0];
+					int tx = mouseX + dirs[d][1];
+					if(ty < 0 || ty >= height || tx < 0 || tx >= width) continue;
+					
+					//only check squares where we placed 'O' or marked as capture
+					if(board[ty][tx] == 'O' || checkCapture[ty][tx]){
+						//simulate: remove king from old pos, place king at new pos
+						char savedDst = board[ty][tx];
+						bool wasCap = checkCapture[ty][tx];
+						char savedSrc = board[mouseY][mouseX];
+						
+						board[mouseY][mouseX] = ' ';
+						board[ty][tx] = 'K';
+						
+						bool wouldBeInCheck = false;
+						check_det(true, board, wouldBeInCheck);
+						
+						//undo simulation
+						board[mouseY][mouseX] = savedSrc;
+						board[ty][tx] = savedDst;
+						
+						//if moving there puts king in check, remove that move option
+						if(wouldBeInCheck){
+							if(wasCap){
+								checkCapture[ty][tx] = false;
+							} else {
+								board[ty][tx] = ' '; //remove the 'O'
+							}
+						}
+					}
+				}
+			}
+
 			//-------- CASTLING for WHITE king --------
 			//king must be on its starting square (row 7, col 4) and not have moved
 			//the path squares must be empty, and the rook must not have moved
@@ -2208,6 +2247,45 @@ void clicked( RenderWindow& window ,char** board, int mouseX , int mouseY , bool
 	 					checkCapture[mouseY-1][mouseX+1] = true;
 	 					}
 					}
+
+			//-------- FILTER OUT KING MOVES THAT LAND IN CHECK --------
+			//for each of the 8 surrounding squares, simulate the king moving there
+			//and check if the king would be in check; if so, remove that move
+			{
+				int dirs[8][2] = {{0,-1},{0,1},{-1,0},{1,0},{1,-1},{1,1},{-1,-1},{-1,1}};
+				for(int d=0; d<8; d++){
+					int ty = mouseY + dirs[d][0];
+					int tx = mouseX + dirs[d][1];
+					if(ty < 0 || ty >= height || tx < 0 || tx >= width) continue;
+					
+					//only check squares where we placed 'O' or marked as capture
+					if(board[ty][tx] == 'O' || checkCapture[ty][tx]){
+						//simulate: remove king from old pos, place king at new pos
+						char savedDst = board[ty][tx];
+						bool wasCap = checkCapture[ty][tx];
+						char savedSrc = board[mouseY][mouseX];
+						
+						board[mouseY][mouseX] = ' ';
+						board[ty][tx] = 'k';
+						
+						bool wouldBeInCheck = false;
+						check_det(false, board, wouldBeInCheck);
+						
+						//undo simulation
+						board[mouseY][mouseX] = savedSrc;
+						board[ty][tx] = savedDst;
+						
+						//if moving there puts king in check, remove that move option
+						if(wouldBeInCheck){
+							if(wasCap){
+								checkCapture[ty][tx] = false;
+							} else {
+								board[ty][tx] = ' '; //remove the 'O'
+							}
+						}
+					}
+				}
+			}
 
 			//-------- CASTLING for BLACK king --------
 			//same logic as white but uses bKingMoved / bRookKMoved / bRookQMoved
