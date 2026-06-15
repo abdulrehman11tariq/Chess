@@ -2430,6 +2430,7 @@ int main(){
 					x= (ev.mouseButton.x - boarder_width) / ((window_width - 2*boarder_width) / width);
 					y= (ev.mouseButton.y - boarder_height) / ((window_height - 2*boarder_height) / height);
 					
+					if(!isDraw)
 					clicked( window, board, x , y , mouseClicked , turn , checkCapture);
 					
 					}
