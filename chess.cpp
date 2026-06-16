@@ -480,6 +480,118 @@ bool is_pinned_black(char** board, int pieceY, int pieceX){
 	return kingInCheck;
 }
 
+//-------- PAWN PROMOTION STATE --------
+//these track whether a promotion choice is pending
+static bool promotionPending = false;
+static int  promotionRow = -1;
+static int  promotionCol = -1;
+static bool promotionTurn = true; //which side is promoting
+
+//draws the promotion selection popup on screen
+void draw_promotion_menu(RenderWindow& window, bool turn){
+	
+	float tileSize = (window_width - 2 * boarder_width) / width;
+	
+	//dark overlay behind the popup
+	RectangleShape overlay(Vector2f(window_width, window_height));
+	overlay.setFillColor(Color(0, 0, 0, 140));
+	window.draw(overlay);
+	
+	//popup background box (4 tiles wide, 1 tile tall)
+	float boxW = tileSize * 4 + 40;
+	float boxH = tileSize + 40;
+	RectangleShape popupBg(Vector2f(boxW, boxH));
+	popupBg.setOrigin(boxW / 2.f, boxH / 2.f);
+	popupBg.setPosition(window_width / 2.f, window_height / 2.f);
+	popupBg.setFillColor(Color(40, 40, 40, 240));
+	popupBg.setOutlineColor(Color(200, 200, 200, 255));
+	popupBg.setOutlineThickness(3.f);
+	window.draw(popupBg);
+	
+	//the 4 piece options: Queen, Rook, Bishop, Knight
+	//load textures (static so only once)
+	static Texture promoWQ, promoWR, promoWB, promoWN;
+	static Texture promoBQ, promoBR, promoBB, promoBN;
+	static bool promoTexLoaded = false;
+	if(!promoTexLoaded){
+		promoWQ.loadFromFile("assets/White/queen.png");
+		promoWR.loadFromFile("assets/White/rook.png");
+		promoWB.loadFromFile("assets/White/bishop.png");
+		promoWN.loadFromFile("assets/White/knight.png");
+		promoBQ.loadFromFile("assets/Black/queen.png");
+		promoBR.loadFromFile("assets/Black/rook.png");
+		promoBB.loadFromFile("assets/Black/bishop.png");
+		promoBN.loadFromFile("assets/Black/knight.png");
+		promoTexLoaded = true;
+	}
+	
+	Sprite pieces[4];
+	if(turn == 1){
+		pieces[0].setTexture(promoWQ);
+		pieces[1].setTexture(promoWR);
+		pieces[2].setTexture(promoWB);
+		pieces[3].setTexture(promoWN);
+	}
+	else{
+		pieces[0].setTexture(promoBQ);
+		pieces[1].setTexture(promoBR);
+		pieces[2].setTexture(promoBB);
+		pieces[3].setTexture(promoBN);
+	}
+	
+	float startX = window_width / 2.f - (tileSize * 4) / 2.f;
+	float startY = window_height / 2.f - tileSize / 2.f;
+	
+	for(int i = 0; i < 4; i++){
+		//tile background for each piece option
+		RectangleShape tileBg(Vector2f(tileSize, tileSize));
+		tileBg.setPosition(startX + i * tileSize, startY);
+		if(i % 2 == 0)
+			tileBg.setFillColor(Color(180, 140, 100, 255));
+		else
+			tileBg.setFillColor(Color(240, 220, 180, 255));
+		tileBg.setOutlineColor(Color(100, 100, 100, 200));
+		tileBg.setOutlineThickness(2.f);
+		window.draw(tileBg);
+		
+		pieces[i].setScale(2, 2);
+		pieces[i].setPosition(startX + i * tileSize + 15, startY + 33);
+		window.draw(pieces[i]);
+	}
+}
+
+//handles the click during promotion: returns the chosen piece char, or ' ' if no valid click
+char handle_promotion_click(int pixelX, int pixelY, bool turn){
+	
+	float tileSize = (window_width - 2 * boarder_width) / width;
+	
+	float startX = window_width / 2.f - (tileSize * 4) / 2.f;
+	float startY = window_height / 2.f - tileSize / 2.f;
+	
+	//check if click is inside the popup area
+	if(pixelY < startY || pixelY > startY + tileSize) return ' ';
+	if(pixelX < startX || pixelX > startX + tileSize * 4) return ' ';
+	
+	int slot = (int)((pixelX - startX) / tileSize);
+	if(slot < 0 || slot > 3) return ' ';
+	
+	//slot 0=Queen, 1=Rook, 2=Bishop, 3=Knight
+	if(turn == 1){
+		if(slot == 0) return 'Q';
+		else if(slot == 1) return 'R';
+		else if(slot == 2) return 'B';
+		else if(slot == 3) return 'N';
+	}
+	else{
+		if(slot == 0) return 'q';
+		else if(slot == 1) return 'r';
+		else if(slot == 2) return 'b';
+		else if(slot == 3) return 'n';
+	}
+	
+	return ' ';
+}
+
 //new func 
 void clicked( RenderWindow& window ,char** board, int mouseX , int mouseY , bool& mouseClicked , bool& turn, bool checkCapture[8][8]){
 	if (mouseX < 0 || mouseX >= width || mouseY < 0 || mouseY >= height) return;
@@ -585,6 +697,17 @@ void clicked( RenderWindow& window ,char** board, int mouseX , int mouseY , bool
 					checkCapture[i][j] = false;
 				}
 			}
+		
+		//-------- PAWN PROMOTION CHECK --------
+		//if a pawn just landed on row 0, it reached the end -> promotion needed!
+		if( (last_clicked_piece == 'P' || last_clicked_piece == 'p') && mouseY == 0){
+			promotionPending = true;
+			promotionRow = mouseY;
+			promotionCol = mouseX;
+			promotionTurn = turn;
+			//dont rotate or switch turn yet, wait for player to pick a piece
+			return;
+		}
 		
 		turn = !turn;
 	
@@ -2425,7 +2548,32 @@ int main(){
 			if(ev.type == Event::MouseButtonPressed){
 				if(ev.mouseButton.button == Mouse::Button::Left ){
 					
-						
+					//-------- PROMOTION CLICK HANDLING --------
+					//if promotion is pending, handle the popup click instead of normal move
+					if(promotionPending){
+						char chosen = handle_promotion_click(ev.mouseButton.x, ev.mouseButton.y, promotionTurn);
+						if(chosen != ' '){
+							//replace the pawn with chosen piece
+							board[promotionRow][promotionCol] = chosen;
+							promotionPending = false;
+							
+							//now do the turn switch and rotation that was delayed
+							turn = !turn;
+							
+							char temp[height][width];
+							for(int i=0 ; i<height ; i++){
+								for(int j=0 ; j<width ; j++){
+									temp[i][j] = board[height-1-i][width-1-j];
+								}
+							}
+							for(int i=0 ; i<height ; i++){
+								for(int j=0 ; j<width ; j++){
+									board[i][j] = temp[i][j];
+								}
+							}
+						}
+					}
+					else{
 						
 					x= (ev.mouseButton.x - boarder_width) / ((window_width - 2*boarder_width) / width);
 					y= (ev.mouseButton.y - boarder_height) / ((window_height - 2*boarder_height) / height);
@@ -2433,6 +2581,7 @@ int main(){
 					if(!isDraw)
 					clicked( window, board, x , y , mouseClicked , turn , checkCapture);
 					
+					}
 					}
 			}
 		}
@@ -2453,6 +2602,12 @@ int main(){
 		
 		//calling functions
 		display_board(window, board , checkCapture, whiteInCheck, blackInCheck);
+		
+		//-------- PROMOTION POPUP --------
+		//draw the piece selection menu when promotion is pending
+		if(promotionPending){
+			draw_promotion_menu(window, promotionTurn);
+		}
 		
 		// -------- DRAW OVERLAY --------
 		if(isDraw){
