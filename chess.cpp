@@ -9,6 +9,12 @@
 using namespace std;
 using namespace  sf;
 
+//-------- SELECTION & LAST MOVE HIGHLIGHT TRACKING --------
+//these track which tile is currently selected and what the last move was
+static int  selectedRow = -1, selectedCol = -1; //tile of the piece the player clicked
+static int  lastMoveFromRow = -1, lastMoveFromCol = -1; //where the last piece came from
+static int  lastMoveToRow   = -1, lastMoveToCol   = -1; //where the last piece went to
+
 const int height = 8; 
 const int width =  8;
 const int window_height = 1050;
@@ -22,23 +28,21 @@ void display_board(RenderWindow& window, char** board , bool checkCapture[height
 	float tileSize = (window_width - 2 * boarder_width) / width;
 
 	CircleShape moveCircle;
-	float radius = tileSize * 0.28f;
+	float radius = tileSize * 0.15f;
 
 	moveCircle.setRadius(radius);
 	moveCircle.setOrigin(radius, radius);
 
-	// semi transparent gray
-	moveCircle.setFillColor(Color(120, 120, 120, 170));
+	// semi transparent dark gray
+	moveCircle.setFillColor(Color(0, 0, 0, 80));
 	
 	
-	//Square for capture display
-	CircleShape capSquare(tileSize*0.5f , 4);	
-	
-	//clr
-	capSquare.setFillColor(Color::Transparent);
-	capSquare.setOutlineColor(Color::Red);
-	capSquare.setOutlineThickness(4.0f);
-	capSquare.setRotation(45);
+	//Donut ring for capture display (outer circle minus inner = ring)
+	float capRadius = tileSize * 0.48f;
+	CircleShape capRing(capRadius, 40);
+	capRing.setFillColor(Color::Transparent);
+	capRing.setOutlineColor(Color(0, 0, 0, 80));
+	capRing.setOutlineThickness(-tileSize * 0.12f);
 			
 	
 	//SPRITES FOR WHITE GOTTI
@@ -104,9 +108,29 @@ void display_board(RenderWindow& window, char** board , bool checkCapture[height
 	BkingSprite.setScale(2,2);
 	
 	
+	// HIGHLIGHT on last move from/to tiles (soft green like lichess)
+	RectangleShape lastMoveHL(Vector2f(tileSize, tileSize));
+	lastMoveHL.setFillColor(Color(155, 199, 0, 105));
+	
+	if(lastMoveFromRow >= 0 && lastMoveFromCol >= 0){
+		lastMoveHL.setPosition(boarder_width + lastMoveFromCol * tileSize, boarder_height + lastMoveFromRow * tileSize);
+		window.draw(lastMoveHL);
+	}
+	if(lastMoveToRow >= 0 && lastMoveToCol >= 0){
+		lastMoveHL.setPosition(boarder_width + lastMoveToCol * tileSize, boarder_height + lastMoveToRow * tileSize);
+		window.draw(lastMoveHL);
+	}
+	
+	// HIGHLIGHT on selected piece tile (soft blue)
+	if(selectedRow >= 0 && selectedCol >= 0){
+		RectangleShape selHL(Vector2f(tileSize, tileSize));
+		selHL.setFillColor(Color(100, 150, 255, 100));
+		selHL.setPosition(boarder_width + selectedCol * tileSize, boarder_height + selectedRow * tileSize);
+		window.draw(selHL);
+	}
+	
 	// RED HIGHLIGHT on king tile when in check
-	float tileS = (window_width - 2 * boarder_width) / width;
-	RectangleShape checkHighlight(Vector2f(tileS, tileS));
+	RectangleShape checkHighlight(Vector2f(tileSize, tileSize));
 	checkHighlight.setFillColor(Color(220, 50, 50, 140));
 	checkHighlight.setOutlineColor(Color(255, 0, 0, 255));
 	checkHighlight.setOutlineThickness(4.0f);
@@ -115,8 +139,8 @@ void display_board(RenderWindow& window, char** board , bool checkCapture[height
 		for(int col = 0; col < 8; col++){
 			char p = board[row][col];
 			if( (wCheck && p == 'K') || (bCheck && p == 'k') ){
-				float px = boarder_width + col * tileS;
-				float py = boarder_height + row * tileS;
+				float px = boarder_width + col * tileSize;
+				float py = boarder_height + row * tileSize;
 				checkHighlight.setPosition(px, py);
 				window.draw(checkHighlight);
 			}
@@ -193,12 +217,13 @@ void display_board(RenderWindow& window, char** board , bool checkCapture[height
 			}
 			
 			
-			float centerX = boarder_width + col * tileSize + tileSize/2.0f;
-			float centerY = boarder_height + row * tileSize ;
+			float capCX = boarder_width + col * tileSize + tileSize/2.0f;
+			float capCY = boarder_height + row * tileSize + tileSize/2.0f;
 
-			capSquare.setPosition(centerX , centerY);
+			capRing.setOrigin(capRadius, capRadius);
+			capRing.setPosition(capCX , capCY);
 			if(checkCapture[row][col])
-				window.draw(capSquare);
+				window.draw(capRing);
 			
 						
 		}
@@ -689,6 +714,18 @@ void clicked( RenderWindow& window ,char** board, int mouseX , int mouseY , bool
 			ep_col    = -1;
 		}
 		
+		//-------- LAST MOVE HIGHLIGHT update --------
+		//store where the piece came from and where it went
+		//these get rotated with the board below, so store the rotated coords
+		lastMoveFromRow = height - 1 - last_mouseY;
+		lastMoveFromCol = width  - 1 - last_mouseX;
+		lastMoveToRow   = height - 1 - mouseY;
+		lastMoveToCol   = width  - 1 - mouseX;
+		
+		//clear selection since the move is done
+		selectedRow = -1;
+		selectedCol = -1;
+		
 		mouseClicked = false;
 		//deleting old valid move
 		for(int i=0 ; i<height ; i++){
@@ -736,6 +773,10 @@ void clicked( RenderWindow& window ,char** board, int mouseX , int mouseY , bool
 		return;
 		
 	}
+	
+	//clear selection highlight (moving to new piece or clicking empty)
+	selectedRow = -1;
+	selectedCol = -1;
 	
 	//deleting old valid move and capture
 	for(int i=0 ; i<height ; i++){
@@ -2432,6 +2473,10 @@ void clicked( RenderWindow& window ,char** board, int mouseX , int mouseY , bool
 	last_mouseX = mouseX;
 	mouseClicked = true;
 	
+	//-------- SELECTION HIGHLIGHT update --------
+	selectedRow = mouseY;
+	selectedCol = mouseX;
+	
 	
 }
 	
@@ -2602,6 +2647,29 @@ int main(){
 		
 		//calling functions
 		display_board(window, board , checkCapture, whiteInCheck, blackInCheck);
+		
+		//-------- TURN INDICATOR --------
+		//show whose turn it is above the board
+		{
+			static Font turnFont;
+			static bool turnFontLoaded = false;
+			if(!turnFontLoaded){
+				if(!turnFont.loadFromFile("C:/Windows/Fonts/arialbd.ttf"))
+					turnFont.loadFromFile("C:/Windows/Fonts/arial.ttf");
+				turnFontLoaded = true;
+			}
+			
+			Text turnText;
+			turnText.setFont(turnFont);
+			turnText.setString(turn ? "White's Turn" : "Black's Turn");
+			turnText.setCharacterSize(22);
+			turnText.setFillColor(Color(230, 230, 230, 220));
+			turnText.setStyle(Text::Bold);
+			FloatRect tb = turnText.getLocalBounds();
+			turnText.setOrigin(tb.left + tb.width/2.f, tb.top + tb.height/2.f);
+			turnText.setPosition(window_width / 2.f, boarder_height / 2.f);
+			window.draw(turnText);
+		}
 		
 		//-------- PROMOTION POPUP --------
 		//draw the piece selection menu when promotion is pending
