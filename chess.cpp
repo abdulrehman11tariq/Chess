@@ -810,27 +810,13 @@ void clicked( RenderWindow& window ,char** board, int mouseX , int mouseY , bool
 			}
 			
 			if (mouseY-1 >= 0 && mouseX-1 >= 0) {
-				switch( board[mouseY-1][mouseX-1]){
-					case 'p':
-	 				case 'q':
-	 				case 'b':
-	 				case 'r':
-	 				case 'k':
-	 				case 'n':
-						checkCapture[mouseY-1][mouseX-1] = true;
-				}
+				if(isBlackPiece(board[mouseY-1][mouseX-1]))
+					checkCapture[mouseY-1][mouseX-1] = true;
 			}
 			
 			if (mouseY-1 >= 0 && mouseX+1 < width) {
-				switch( board[mouseY-1][mouseX+1]){
-					case 'p':
-	 				case 'q':
-	 				case 'b':
-	 				case 'r':
-	 				case 'k':
-	 				case 'n':
-						checkCapture[mouseY-1][mouseX+1] = true;
-				}	
+				if(isBlackPiece(board[mouseY-1][mouseX+1]))
+					checkCapture[mouseY-1][mouseX+1] = true;
 			}
 			
 			//-------- EN PASSANT for white pawn --------
@@ -1413,27 +1399,13 @@ void clicked( RenderWindow& window ,char** board, int mouseX , int mouseY , bool
 			}
 		
 			if (mouseY-1 >= 0 && mouseX-1 >= 0) {
-				switch( board[mouseY-1][mouseX-1]){
-					case 'P':
-	 				case 'Q':
-	 				case 'B':
-	 				case 'R':
-	 				case 'K':
-	 				case 'N':
-						checkCapture[mouseY-1][mouseX-1] = true;
-				}
+				if(isWhitePiece(board[mouseY-1][mouseX-1]))
+					checkCapture[mouseY-1][mouseX-1] = true;
 			}
 			
 			if (mouseY-1 >= 0 && mouseX+1 < width) {
-				switch( board[mouseY-1][mouseX+1]){
-					case 'P':
-	 				case 'Q':
-	 				case 'B':
-	 				case 'R':
-	 				case 'K':
-	 				case 'N':
-						checkCapture[mouseY-1][mouseX+1] = true;
-				}
+				if(isWhitePiece(board[mouseY-1][mouseX+1]))
+					checkCapture[mouseY-1][mouseX+1] = true;
 			}
 			
 			//-------- EN PASSANT for black pawn --------
