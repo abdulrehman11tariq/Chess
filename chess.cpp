@@ -45,67 +45,39 @@ void display_board(RenderWindow& window, char** board , bool checkCapture[height
 	capRing.setOutlineThickness(-tileSize * 0.12f);
 			
 	
-	//SPRITES FOR WHITE GOTTI
-	static Texture WpawnTex;
-	WpawnTex.loadFromFile("assets/White/pawn.png");
-	static Sprite WpawnSprite(WpawnTex);
-	WpawnSprite.setScale(2,2);
-	
-	static Texture WrookTex;
-	WrookTex.loadFromFile("assets/White/rook.png");
-	static Sprite WrookSprite(WrookTex);
-	WrookSprite.setScale(2,2);
-	
-	static Texture WknightTex;
-	WknightTex.loadFromFile("assets/White/knight.png");
-	static Sprite WknightSprite(WknightTex);
-	WknightSprite.setScale(2,2);
-	
-	static Texture WbishopTex;
-	WbishopTex.loadFromFile("assets/White/bishop.png");
-	static Sprite WbishopSprite(WbishopTex);
-	WbishopSprite.setScale(2,2);
-	
-	static Texture WqueenTex;
-	WqueenTex.loadFromFile("assets/White/queen.png");
-	static Sprite WqueenSprite(WqueenTex);
-	WqueenSprite.setScale(2,2);
-	
-	static Texture WkingTex;
-	WkingTex.loadFromFile("assets/White/king.png");
-	static Sprite WkingSprite(WkingTex);
-	WkingSprite.setScale(2,2);
-	
-	//SPRITES FOR BLACK GOTTI
-	static Texture BpawnTex;
-	BpawnTex.loadFromFile("assets/Black/pawn.png");
-	static Sprite BpawnSprite(BpawnTex);
-	BpawnSprite.setScale(2,2);
-	
-	static Texture BrookTex;
-	BrookTex.loadFromFile("assets/Black/rook.png");
-	static Sprite BrookSprite(BrookTex);
-	BrookSprite.setScale(2,2);
-	
-	static Texture BknightTex;
-	BknightTex.loadFromFile("assets/Black/knight.png");
-	static Sprite BknightSprite(BknightTex);
-	BknightSprite.setScale(2,2);
-	
-	static Texture BbishopTex;
-	BbishopTex.loadFromFile("assets/Black/bishop.png");
-	static Sprite BbishopSprite(BbishopTex);
-	BbishopSprite.setScale(2,2);
-	
-	static Texture BqueenTex;
-	BqueenTex.loadFromFile("assets/Black/queen.png");
-	static Sprite BqueenSprite(BqueenTex);
-	BqueenSprite.setScale(2,2);
-	
-	static Texture BkingTex;
-	BkingTex.loadFromFile("assets/Black/king.png");
-	static Sprite BkingSprite(BkingTex);
-	BkingSprite.setScale(2,2);
+	//SPRITES FOR WHITE & BLACK PIECES (load textures only once)
+	static Texture WpawnTex, WrookTex, WknightTex, WbishopTex, WqueenTex, WkingTex;
+	static Texture BpawnTex, BrookTex, BknightTex, BbishopTex, BqueenTex, BkingTex;
+	static Sprite WpawnSprite, WrookSprite, WknightSprite, WbishopSprite, WqueenSprite, WkingSprite;
+	static Sprite BpawnSprite, BrookSprite, BknightSprite, BbishopSprite, BqueenSprite, BkingSprite;
+	static bool piecesTexLoaded = false;
+	if(!piecesTexLoaded){
+		WpawnTex.loadFromFile("assets/White/pawn.png");
+		WrookTex.loadFromFile("assets/White/rook.png");
+		WknightTex.loadFromFile("assets/White/knight.png");
+		WbishopTex.loadFromFile("assets/White/bishop.png");
+		WqueenTex.loadFromFile("assets/White/queen.png");
+		WkingTex.loadFromFile("assets/White/king.png");
+		BpawnTex.loadFromFile("assets/Black/pawn.png");
+		BrookTex.loadFromFile("assets/Black/rook.png");
+		BknightTex.loadFromFile("assets/Black/knight.png");
+		BbishopTex.loadFromFile("assets/Black/bishop.png");
+		BqueenTex.loadFromFile("assets/Black/queen.png");
+		BkingTex.loadFromFile("assets/Black/king.png");
+		WpawnSprite.setTexture(WpawnTex);     WpawnSprite.setScale(2,2);
+		WrookSprite.setTexture(WrookTex);     WrookSprite.setScale(2,2);
+		WknightSprite.setTexture(WknightTex); WknightSprite.setScale(2,2);
+		WbishopSprite.setTexture(WbishopTex); WbishopSprite.setScale(2,2);
+		WqueenSprite.setTexture(WqueenTex);   WqueenSprite.setScale(2,2);
+		WkingSprite.setTexture(WkingTex);     WkingSprite.setScale(2,2);
+		BpawnSprite.setTexture(BpawnTex);     BpawnSprite.setScale(2,2);
+		BrookSprite.setTexture(BrookTex);     BrookSprite.setScale(2,2);
+		BknightSprite.setTexture(BknightTex); BknightSprite.setScale(2,2);
+		BbishopSprite.setTexture(BbishopTex); BbishopSprite.setScale(2,2);
+		BqueenSprite.setTexture(BqueenTex);   BqueenSprite.setScale(2,2);
+		BkingSprite.setTexture(BkingTex);     BkingSprite.setScale(2,2);
+		piecesTexLoaded = true;
+	}
 	
 	
 	// HIGHLIGHT on last move from/to tiles (soft green like lichess)
@@ -336,7 +308,7 @@ void check_det( bool turn , char** board , bool& isCheck){
 	}
 	
 	for(int i=1 ; i<height ; i++){
-		if(kingX + i < height){
+		if(kingX + i < width){
 			if(board[kingY][kingX+i] == 'R' + pcsCorrection || board[kingY][kingX+i] == 'Q' + pcsCorrection){
 				isCheck = true;
 				return;
@@ -475,30 +447,15 @@ void check_det( bool turn , char** board , bool& isCheck){
 	}
 }
 
-//pin detection for white piece at (pieceY, pieceX)
-//temporarily removes the piece and checks if white king is in check
-bool is_pinned_white(char** board, int pieceY, int pieceX){
+//pin detection: temporarily removes the piece and checks if the friendly king is in check
+//turn = true for white pieces, false for black pieces
+bool is_pinned(bool turn, char** board, int pieceY, int pieceX){
 	
 	char saved = board[pieceY][pieceX];
 	board[pieceY][pieceX] = ' ';
 	
 	bool kingInCheck = false;
-	check_det(true, board, kingInCheck);
-	
-	board[pieceY][pieceX] = saved;
-	
-	return kingInCheck;
-}
-
-//pin detection for black piece at (pieceY, pieceX)
-//temporarily removes the piece and checks if black king is in check
-bool is_pinned_black(char** board, int pieceY, int pieceX){
-	
-	char saved = board[pieceY][pieceX];
-	board[pieceY][pieceX] = ' ';
-	
-	bool kingInCheck = false;
-	check_det(false, board, kingInCheck);
+	check_det(turn, board, kingInCheck);
 	
 	board[pieceY][pieceX] = saved;
 	
@@ -742,10 +699,10 @@ void clicked( RenderWindow& window ,char** board, int mouseX , int mouseY , bool
 		//deleting old valid move
 		for(int i=0 ; i<height ; i++){
 			for(int j=0 ; j<width ; j++){
-				if(board[i][j] == 'O')		board[i][j] = ' ';
-					checkCapture[i][j] = false;
-				}
+				if(board[i][j] == 'O') board[i][j] = ' ';
+				checkCapture[i][j] = false;
 			}
+		}
 		
 		//-------- PAWN PROMOTION CHECK --------
 		//if a pawn just landed on row 0, it reached the end -> promotion needed!
@@ -793,15 +750,15 @@ void clicked( RenderWindow& window ,char** board, int mouseX , int mouseY , bool
 	//deleting old valid move and capture
 	for(int i=0 ; i<height ; i++){
 		for(int j=0 ; j<width ; j++){
-			if(board[i][j] == 'O')		board[i][j] = ' ';
-				checkCapture[i][j] = false;
-			}
+			if(board[i][j] == 'O') board[i][j] = ' ';
+			checkCapture[i][j] = false;
 		}
+	}
 	
 	if(turn == 1){
 		// pawn
 		if (board[mouseY][mouseX] == 'P') {
-			if(is_pinned_white(board, mouseY, mouseX)) return;
+			if(is_pinned(true, board, mouseY, mouseX)) return;
 			last_clicked_piece = 'P';
 			if( mouseY-1 >= 0 && board[mouseY-1][mouseX] == ' '){
 				board[mouseY-1][mouseX] = 'O';
@@ -835,7 +792,7 @@ void clicked( RenderWindow& window ,char** board, int mouseX , int mouseY , bool
 
 		// rook
 		if (board[mouseY][mouseX] == 'R') {
-			if(is_pinned_white(board, mouseY, mouseX)) return;
+			if(is_pinned(true, board, mouseY, mouseX)) return;
 		last_clicked_piece = 'R';
 			
 			//moves after that peice
@@ -890,137 +847,70 @@ void clicked( RenderWindow& window ,char** board, int mouseX , int mouseY , bool
 
 		// knight
 		if (board[mouseY][mouseX] == 'N') {
-			if(is_pinned_white(board, mouseY, mouseX)) return;
-		last_clicked_piece = 'N';
-			
+			if(is_pinned(true, board, mouseY, mouseX)) return;
+			last_clicked_piece = 'N';
 			
 			if(mouseX-1 >= 0  &&  mouseY+2 < height){
-							switch(board[mouseY+2][mouseX-1]){
-							case ' ':
-			 					board[mouseY+2][mouseX-1] = 'O';
-			 					break;
-			 				case 'p':
-			 				case 'q':
-			 				case 'b':
-			 				case 'r':
-			 				case 'k':
-			 				case 'n':
-			 					checkCapture[mouseY+2][mouseX-1] = true;
-			 					}
-			 				}
+				if(board[mouseY+2][mouseX-1] == ' ')
+					board[mouseY+2][mouseX-1] = 'O';
+				else if(isBlackPiece(board[mouseY+2][mouseX-1]))
+					checkCapture[mouseY+2][mouseX-1] = true;
+			}
 		
 			if(mouseX+1 < width  &&  mouseY+2 < height){
-							switch(board[mouseY+2][mouseX+1]){
-							case ' ':
-			 					board[mouseY+2][mouseX+1] = 'O';
-			 					break;
-			 				case 'p':
-			 				case 'q':
-			 				case 'b':
-			 				case 'r':
-			 				case 'k':
-			 				case 'n':
-			 					checkCapture[mouseY+2][mouseX+1] = true;
-			 					}
-			 				}
+				if(board[mouseY+2][mouseX+1] == ' ')
+					board[mouseY+2][mouseX+1] = 'O';
+				else if(isBlackPiece(board[mouseY+2][mouseX+1]))
+					checkCapture[mouseY+2][mouseX+1] = true;
+			}
 			
 			if(mouseY-1 >= 0  &&  mouseX+2 < width){
-							switch(board[mouseY-1][mouseX+2]){
-							case ' ':
-			 					board[mouseY-1][mouseX+2] = 'O';
-			 					break;
-			 				case 'p':
-			 				case 'q':
-			 				case 'b':
-			 				case 'r':
-			 				case 'k':
-			 				case 'n':
-			 					checkCapture[mouseY-1][mouseX+2] = true;
-			 					}
-			 				}					
+				if(board[mouseY-1][mouseX+2] == ' ')
+					board[mouseY-1][mouseX+2] = 'O';
+				else if(isBlackPiece(board[mouseY-1][mouseX+2]))
+					checkCapture[mouseY-1][mouseX+2] = true;
+			}
 			
 			if(mouseY+1 < height  &&  mouseX+2 < width){
-							switch(board[mouseY+1][mouseX+2]){
-							case ' ':
-			 					board[mouseY+1][mouseX+2] = 'O';
-			 					break;
-			 				case 'p':
-			 				case 'q':
-			 				case 'b':
-			 				case 'r':
-			 				case 'k':
-			 				case 'n':
-			 					checkCapture[mouseY+1][mouseX+2] = true;
-			 					}
-			 				}
+				if(board[mouseY+1][mouseX+2] == ' ')
+					board[mouseY+1][mouseX+2] = 'O';
+				else if(isBlackPiece(board[mouseY+1][mouseX+2]))
+					checkCapture[mouseY+1][mouseX+2] = true;
+			}
 			
 			if(mouseY-2 >= 0  &&  mouseX-1 >= 0){
-							switch(board[mouseY-2][mouseX-1]){
-							case ' ':
-			 					board[mouseY-2][mouseX-1] = 'O';
-			 					break;
-			 				case 'p':
-			 				case 'q':
-			 				case 'b':
-			 				case 'r':
-			 				case 'k':
-			 				case 'n':
-			 					checkCapture[mouseY-2][mouseX-1] = true;
-			 					}
-			 				} 					
+				if(board[mouseY-2][mouseX-1] == ' ')
+					board[mouseY-2][mouseX-1] = 'O';
+				else if(isBlackPiece(board[mouseY-2][mouseX-1]))
+					checkCapture[mouseY-2][mouseX-1] = true;
+			}
 			
 			if(mouseY-2 >= 0  &&  mouseX+1 < width){
-							switch(board[mouseY-2][mouseX+1]){
-							case ' ':
-			 					board[mouseY-2][mouseX+1] = 'O';
-			 					break;
-			 				case 'p':
-			 				case 'q':
-			 				case 'b':
-			 				case 'r':
-			 				case 'k':
-			 				case 'n':
-			 					checkCapture[mouseY-2][mouseX+1] = true;
-			 					}
-			 				}
+				if(board[mouseY-2][mouseX+1] == ' ')
+					board[mouseY-2][mouseX+1] = 'O';
+				else if(isBlackPiece(board[mouseY-2][mouseX+1]))
+					checkCapture[mouseY-2][mouseX+1] = true;
+			}
 			
 			if(mouseY-1 >= 0  &&  mouseX-2 >= 0){
-							switch(board[mouseY-1][mouseX-2]){
-							case ' ':
-			 					board[mouseY-1][mouseX-2] = 'O';
-			 					break;
-			 				case 'p':
-			 				case 'q':
-			 				case 'b':
-			 				case 'r':
-			 				case 'k':
-			 				case 'n':
-			 					checkCapture[mouseY-1][mouseX-2] = true;
-			 					}
-			 				}
+				if(board[mouseY-1][mouseX-2] == ' ')
+					board[mouseY-1][mouseX-2] = 'O';
+				else if(isBlackPiece(board[mouseY-1][mouseX-2]))
+					checkCapture[mouseY-1][mouseX-2] = true;
+			}
 			
 			if(mouseY+1 < height  &&  mouseX-2 >= 0){
-							switch(board[mouseY+1][mouseX-2]){
-							case ' ':
-			 					board[mouseY+1][mouseX-2] = 'O';
-			 					break;
-			 				case 'p':
-			 				case 'q':
-			 				case 'b':
-			 				case 'r':
-			 				case 'k':
-			 				case 'n':
-			 					checkCapture[mouseY+1][mouseX-2] = true;
-			 					}
-			 				}
-
-
+				if(board[mouseY+1][mouseX-2] == ' ')
+					board[mouseY+1][mouseX-2] = 'O';
+				else if(isBlackPiece(board[mouseY+1][mouseX-2]))
+					checkCapture[mouseY+1][mouseX-2] = true;
+			}
 		}
 		
 
 		// bishop
 		if (board[mouseY][mouseX] == 'B') {
-			if(is_pinned_white(board, mouseY, mouseX)) return;
+			if(is_pinned(true, board, mouseY, mouseX)) return;
 		last_clicked_piece = 'B';
 
 			for(int i=1 ; i<height ; i++){
@@ -1086,7 +976,7 @@ void clicked( RenderWindow& window ,char** board, int mouseX , int mouseY , bool
 
 		// queen
 		if (board[mouseY][mouseX] == 'Q') {
-			if(is_pinned_white(board, mouseY, mouseX)) return;
+			if(is_pinned(true, board, mouseY, mouseX)) return;
 		last_clicked_piece = 'Q';
 			
 		//all rook moves
@@ -1389,7 +1279,7 @@ void clicked( RenderWindow& window ,char** board, int mouseX , int mouseY , bool
 	if(turn == 0){
 		// pawn
 		if (board[mouseY][mouseX] == 'p') {
-			if(is_pinned_black(board, mouseY, mouseX)) return;
+			if(is_pinned(false, board, mouseY, mouseX)) return;
 		last_clicked_piece = 'p';
 			if( mouseY-1 >= 0 && board[mouseY-1][mouseX] == ' ' ){
 				
@@ -1423,7 +1313,7 @@ void clicked( RenderWindow& window ,char** board, int mouseX , int mouseY , bool
 
 		// rook
 		if (board[mouseY][mouseX] == 'r') {
-			if(is_pinned_black(board, mouseY, mouseX)) return;
+			if(is_pinned(false, board, mouseY, mouseX)) return;
 		last_clicked_piece = 'r';
 			
 			//moves after that peice
@@ -1479,135 +1369,70 @@ void clicked( RenderWindow& window ,char** board, int mouseX , int mouseY , bool
 
 		// knight
 		if (board[mouseY][mouseX] == 'n') {
-			if(is_pinned_black(board, mouseY, mouseX)) return;
-		last_clicked_piece = 'n';
+			if(is_pinned(false, board, mouseY, mouseX)) return;
+			last_clicked_piece = 'n';
 		
 			if(mouseX-1 >= 0  &&  mouseY+2 < height){
-							switch(board[mouseY+2][mouseX-1]){
-							case ' ':
-			 					board[mouseY+2][mouseX-1] = 'O';
-			 					break;
-			 				case 'P':
-			 				case 'Q':
-			 				case 'B':
-			 				case 'R':
-			 				case 'K':
-			 				case 'N':
-			 					checkCapture[mouseY+2][mouseX-1] = true;
-			 					}
-			 				}
+				if(board[mouseY+2][mouseX-1] == ' ')
+					board[mouseY+2][mouseX-1] = 'O';
+				else if(isWhitePiece(board[mouseY+2][mouseX-1]))
+					checkCapture[mouseY+2][mouseX-1] = true;
+			}
 		
 			if(mouseX+1 < width  &&  mouseY+2 < height){
-							switch(board[mouseY+2][mouseX+1]){
-							case ' ':
-			 					board[mouseY+2][mouseX+1] = 'O';
-			 					break;
-			 				case 'P':
-			 				case 'Q':
-			 				case 'B':
-			 				case 'R':
-			 				case 'K':
-			 				case 'N':
-			 					checkCapture[mouseY+2][mouseX+1] = true;
-			 					}
-			 				}
+				if(board[mouseY+2][mouseX+1] == ' ')
+					board[mouseY+2][mouseX+1] = 'O';
+				else if(isWhitePiece(board[mouseY+2][mouseX+1]))
+					checkCapture[mouseY+2][mouseX+1] = true;
+			}
 			
 			if(mouseY-1 >= 0  &&  mouseX+2 < width){
-							switch(board[mouseY-1][mouseX+2]){
-							case ' ':
-			 					board[mouseY-1][mouseX+2] = 'O';
-			 					break;
-			 				case 'P':
-			 				case 'Q':
-			 				case 'B':
-			 				case 'R':
-			 				case 'K':
-			 				case 'N':
-			 					checkCapture[mouseY-1][mouseX+2] = true;
-			 					}
-			 				}					
+				if(board[mouseY-1][mouseX+2] == ' ')
+					board[mouseY-1][mouseX+2] = 'O';
+				else if(isWhitePiece(board[mouseY-1][mouseX+2]))
+					checkCapture[mouseY-1][mouseX+2] = true;
+			}
 			
 			if(mouseY+1 < height  &&  mouseX+2 < width){
-							switch(board[mouseY+1][mouseX+2]){
-							case ' ':
-			 					board[mouseY+1][mouseX+2] = 'O';
-			 					break;
-			 				case 'P':
-			 				case 'Q':
-			 				case 'B':
-			 				case 'R':
-			 				case 'K':
-			 				case 'N':
-			 					checkCapture[mouseY+1][mouseX+2] = true;
-			 					}
-			 				}
+				if(board[mouseY+1][mouseX+2] == ' ')
+					board[mouseY+1][mouseX+2] = 'O';
+				else if(isWhitePiece(board[mouseY+1][mouseX+2]))
+					checkCapture[mouseY+1][mouseX+2] = true;
+			}
 			
 			if(mouseY-2 >= 0  &&  mouseX-1 >= 0){
-							switch(board[mouseY-2][mouseX-1]){
-							case ' ':
-			 					board[mouseY-2][mouseX-1] = 'O';
-			 					break;
-			 				case 'P':
-			 				case 'Q':
-			 				case 'B':
-			 				case 'R':
-			 				case 'K':
-			 				case 'N':
-			 					checkCapture[mouseY-2][mouseX-1] = true;
-			 					}
-			 				} 					
+				if(board[mouseY-2][mouseX-1] == ' ')
+					board[mouseY-2][mouseX-1] = 'O';
+				else if(isWhitePiece(board[mouseY-2][mouseX-1]))
+					checkCapture[mouseY-2][mouseX-1] = true;
+			}
 			
 			if(mouseY-2 >= 0  &&  mouseX+1 < width){
-							switch(board[mouseY-2][mouseX+1]){
-							case ' ':
-			 					board[mouseY-2][mouseX+1] = 'O';
-			 					break;
-			 				case 'P':
-			 				case 'Q':
-			 				case 'B':
-			 				case 'R':
-			 				case 'K':
-			 				case 'N':
-			 					checkCapture[mouseY-2][mouseX+1] = true;
-			 					}
-			 				}
+				if(board[mouseY-2][mouseX+1] == ' ')
+					board[mouseY-2][mouseX+1] = 'O';
+				else if(isWhitePiece(board[mouseY-2][mouseX+1]))
+					checkCapture[mouseY-2][mouseX+1] = true;
+			}
 			
 			if(mouseY-1 >= 0  &&  mouseX-2 >= 0){
-							switch(board[mouseY-1][mouseX-2]){
-							case ' ':
-			 					board[mouseY-1][mouseX-2] = 'O';
-			 					break;
-			 				case 'P':
-			 				case 'Q':
-			 				case 'B':
-			 				case 'R':
-			 				case 'K':
-			 				case 'N':
-			 					checkCapture[mouseY-1][mouseX-2] = true;
-			 					}
-			 				}
+				if(board[mouseY-1][mouseX-2] == ' ')
+					board[mouseY-1][mouseX-2] = 'O';
+				else if(isWhitePiece(board[mouseY-1][mouseX-2]))
+					checkCapture[mouseY-1][mouseX-2] = true;
+			}
 			
 			if(mouseY+1 < height  &&  mouseX-2 >= 0){
-							switch(board[mouseY+1][mouseX-2]){
-							case ' ':
-			 					board[mouseY+1][mouseX-2] = 'O';
-			 					break;
-			 				case 'P':
-			 				case 'Q':
-			 				case 'B':
-			 				case 'R':
-			 				case 'K':
-			 				case 'N':
-			 					checkCapture[mouseY+1][mouseX-2] = true;
-			 					}
-			 				}
-
+				if(board[mouseY+1][mouseX-2] == ' ')
+					board[mouseY+1][mouseX-2] = 'O';
+				else if(isWhitePiece(board[mouseY+1][mouseX-2]))
+					checkCapture[mouseY+1][mouseX-2] = true;
+			}
 
 		}
 
 		// bishop
 		if (board[mouseY][mouseX] == 'b') {
-			if(is_pinned_black(board, mouseY, mouseX)) return;
+			if(is_pinned(false, board, mouseY, mouseX)) return;
 		last_clicked_piece = 'b';
 			
 			for(int i=1 ; i<height ; i++){
@@ -1673,7 +1498,7 @@ void clicked( RenderWindow& window ,char** board, int mouseX , int mouseY , bool
 
 		// queen
 		if (board[mouseY][mouseX] == 'q') {
-			if(is_pinned_black(board, mouseY, mouseX)) return;
+			if(is_pinned(false, board, mouseY, mouseX)) return;
 		last_clicked_piece = 'q';
 		
 		//all rook moves
