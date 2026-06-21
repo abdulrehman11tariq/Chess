@@ -447,8 +447,6 @@ void check_det( bool turn , char** board , bool& isCheck){
 	}
 }
 
-//pin detection: temporarily removes the piece and checks if the friendly king is in check
-//turn = true for white pieces, false for black pieces
 bool is_pinned(bool turn, char** board, int pieceY, int pieceX){
 	
 	char saved = board[pieceY][pieceX];
