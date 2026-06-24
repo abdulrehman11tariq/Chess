@@ -460,6 +460,58 @@ bool is_pinned(bool turn, char** board, int pieceY, int pieceX){
 	return kingInCheck;
 }
 
+//-------- MOVE LEGALITY FILTER --------
+//after generating moves for a non-king piece, remove any move that would
+//leave the own king in check. This handles:
+//  - absolute pins (piece cant move if it exposes king)
+//  - single check evasion (only blocking / capturing the checker survives)
+//  - double check (no non-king move can resolve two checks at once)
+//  - discovered checks are naturally handled by the attacker side
+void filter_illegal_moves(bool turn, char** board, bool checkCapture[8][8], int pieceY, int pieceX){
+	char piece = board[pieceY][pieceX];
+	
+	for(int r = 0; r < height; r++){
+		for(int c = 0; c < width; c++){
+			if(board[r][c] != 'O' && !checkCapture[r][c]) continue;
+			
+			//save state
+			char savedDst = board[r][c];
+			bool savedCap = checkCapture[r][c];
+			
+			//simulate the move
+			board[r][c] = piece;
+			board[pieceY][pieceX] = ' ';
+			
+			//en passant: pawn moved diagonally to an empty 'O' square
+			//the captured pawn sits at (pieceY, c) - same row as source, dest column
+			char savedEP = ' ';
+			bool isEP = false;
+			if((piece == 'P' || piece == 'p') && c != pieceX && savedDst == 'O'){
+				isEP = true;
+				savedEP = board[pieceY][c];
+				board[pieceY][c] = ' ';
+			}
+			
+			//check if own king is still in check
+			bool stillInCheck = false;
+			check_det(turn, board, stillInCheck);
+			
+			//undo simulation
+			board[pieceY][pieceX] = piece;
+			board[r][c] = savedDst;
+			if(isEP) board[pieceY][c] = savedEP;
+			
+			//remove move if king is still in check
+			if(stillInCheck){
+				if(savedCap)
+					checkCapture[r][c] = false;
+				else
+					board[r][c] = ' ';
+			}
+		}
+	}
+}
+
 //-------- PAWN PROMOTION STATE --------
 //these track whether a promotion choice is pending
 static bool promotionPending = false;
@@ -756,7 +808,6 @@ void clicked( RenderWindow& window ,char** board, int mouseX , int mouseY , bool
 	if(turn == 1){
 		// pawn
 		if (board[mouseY][mouseX] == 'P') {
-			if(is_pinned(true, board, mouseY, mouseX)) return;
 			last_clicked_piece = 'P';
 			if( mouseY-1 >= 0 && board[mouseY-1][mouseX] == ' '){
 				board[mouseY-1][mouseX] = 'O';
@@ -790,7 +841,6 @@ void clicked( RenderWindow& window ,char** board, int mouseX , int mouseY , bool
 
 		// rook
 		if (board[mouseY][mouseX] == 'R') {
-			if(is_pinned(true, board, mouseY, mouseX)) return;
 		last_clicked_piece = 'R';
 			
 			//moves after that peice
@@ -845,7 +895,6 @@ void clicked( RenderWindow& window ,char** board, int mouseX , int mouseY , bool
 
 		// knight
 		if (board[mouseY][mouseX] == 'N') {
-			if(is_pinned(true, board, mouseY, mouseX)) return;
 			last_clicked_piece = 'N';
 			
 			if(mouseX-1 >= 0  &&  mouseY+2 < height){
@@ -908,7 +957,6 @@ void clicked( RenderWindow& window ,char** board, int mouseX , int mouseY , bool
 
 		// bishop
 		if (board[mouseY][mouseX] == 'B') {
-			if(is_pinned(true, board, mouseY, mouseX)) return;
 		last_clicked_piece = 'B';
 
 			for(int i=1 ; i<height ; i++){
@@ -974,7 +1022,6 @@ void clicked( RenderWindow& window ,char** board, int mouseX , int mouseY , bool
 
 		// queen
 		if (board[mouseY][mouseX] == 'Q') {
-			if(is_pinned(true, board, mouseY, mouseX)) return;
 		last_clicked_piece = 'Q';
 			
 		//all rook moves
@@ -1277,7 +1324,6 @@ void clicked( RenderWindow& window ,char** board, int mouseX , int mouseY , bool
 	if(turn == 0){
 		// pawn
 		if (board[mouseY][mouseX] == 'p') {
-			if(is_pinned(false, board, mouseY, mouseX)) return;
 		last_clicked_piece = 'p';
 			if( mouseY-1 >= 0 && board[mouseY-1][mouseX] == ' ' ){
 				
@@ -1311,7 +1357,6 @@ void clicked( RenderWindow& window ,char** board, int mouseX , int mouseY , bool
 
 		// rook
 		if (board[mouseY][mouseX] == 'r') {
-			if(is_pinned(false, board, mouseY, mouseX)) return;
 		last_clicked_piece = 'r';
 			
 			//moves after that peice
@@ -1367,7 +1412,6 @@ void clicked( RenderWindow& window ,char** board, int mouseX , int mouseY , bool
 
 		// knight
 		if (board[mouseY][mouseX] == 'n') {
-			if(is_pinned(false, board, mouseY, mouseX)) return;
 			last_clicked_piece = 'n';
 		
 			if(mouseX-1 >= 0  &&  mouseY+2 < height){
@@ -1430,7 +1474,6 @@ void clicked( RenderWindow& window ,char** board, int mouseX , int mouseY , bool
 
 		// bishop
 		if (board[mouseY][mouseX] == 'b') {
-			if(is_pinned(false, board, mouseY, mouseX)) return;
 		last_clicked_piece = 'b';
 			
 			for(int i=1 ; i<height ; i++){
@@ -1496,7 +1539,6 @@ void clicked( RenderWindow& window ,char** board, int mouseX , int mouseY , bool
 
 		// queen
 		if (board[mouseY][mouseX] == 'q') {
-			if(is_pinned(false, board, mouseY, mouseX)) return;
 		last_clicked_piece = 'q';
 		
 		//all rook moves
@@ -1793,6 +1835,15 @@ void clicked( RenderWindow& window ,char** board, int mouseX , int mouseY , bool
 				}
 			}
 
+		}
+	}
+	
+	//-------- FILTER ILLEGAL MOVES for non-king pieces --------
+	//simulate every generated move; remove any that leave own king in check
+	{
+		char pc = board[mouseY][mouseX];
+		if(pc != 'K' && pc != 'k' && pc != ' ' && pc != 'O'){
+			filter_illegal_moves(turn, board, checkCapture, mouseY, mouseX);
 		}
 	}
 	
