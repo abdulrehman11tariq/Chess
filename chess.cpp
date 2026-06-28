@@ -1,6 +1,12 @@
+// menu
+// an option to see the chess notations alongside the game on right side of the board
+// integrating an already made AI engine to evaluate the game(with an option of suggesting moves)
+// sounds and haptics, also an option to change sounds and haptics into memes
+ 
 #include <iostream>
 #include <fstream>
 #include <cmath>
+#include <vector>
 #include <SFML/Graphics.hpp>
 #include <SFML/Audio.hpp>
 #include <SFML/Window.hpp>
@@ -8,6 +14,11 @@
 
 using namespace std;
 using namespace  sf;
+
+//-------- BOARD ROTATION TOGGLE --------
+//set to true to rotate the board 180 after every move (original behavior)
+//set to false to keep the board fixed (white always at bottom)
+const bool ROTATE_BOARD = true;
 
 //-------- SELECTION & LAST MOVE HIGHLIGHT TRACKING --------
 //these track which tile is currently selected and what the last move was
@@ -247,7 +258,7 @@ void check_det( bool turn , char** board , bool& isCheck){
 				return;
 			}
 			
-			else if(board[kingY+i][kingX+i] != ' ') break;
+			else if(board[kingY+i][kingX+i] != ' ' && board[kingY+i][kingX+i] != 'O') break;
 		}
 	}
 	
@@ -258,7 +269,7 @@ void check_det( bool turn , char** board , bool& isCheck){
 				return;
 			}
 			
-			else if(board[kingY+i][kingX-i] != ' ') break;
+			else if(board[kingY+i][kingX-i] != ' ' && board[kingY+i][kingX-i] != 'O') break;
 		}
 	}
 	
@@ -269,7 +280,7 @@ void check_det( bool turn , char** board , bool& isCheck){
 				return;
 			}
 			
-			else if(board[kingY-i][kingX+i] != ' ') break;
+			else if(board[kingY-i][kingX+i] != ' ' && board[kingY-i][kingX+i] != 'O') break;
 		}
 	}
 	
@@ -280,7 +291,7 @@ void check_det( bool turn , char** board , bool& isCheck){
 				return;
 			}
 			
-			else if(board[kingY-i][kingX-i] != ' ') break;
+			else if(board[kingY-i][kingX-i] != ' ' && board[kingY-i][kingX-i] != 'O') break;
 		}
 	}
 	
@@ -292,7 +303,7 @@ void check_det( bool turn , char** board , bool& isCheck){
 				return;
 			}
 			
-			else if(board[kingY+i][kingX] != ' ') break;
+			else if(board[kingY+i][kingX] != ' ' && board[kingY+i][kingX] != 'O') break;
 		}
 	}
 	
@@ -303,7 +314,7 @@ void check_det( bool turn , char** board , bool& isCheck){
 				return;
 			}
 			
-			else if(board[kingY-i][kingX] != ' ') break;
+			else if(board[kingY-i][kingX] != ' ' && board[kingY-i][kingX] != 'O') break;
 		}
 	}
 	
@@ -314,7 +325,7 @@ void check_det( bool turn , char** board , bool& isCheck){
 				return;
 			}
 			
-			else if(board[kingY][kingX+i] != ' ') break;
+			else if(board[kingY][kingX+i] != ' ' && board[kingY][kingX+i] != 'O') break;
 		}
 	}
 	
@@ -325,7 +336,7 @@ void check_det( bool turn , char** board , bool& isCheck){
 				return;
 			}
 			
-			else if(board[kingY][kingX-i] != ' ') break;
+			else if(board[kingY][kingX-i] != ' ' && board[kingY][kingX-i] != 'O') break;
 		}
 	}
 	
@@ -458,6 +469,20 @@ bool is_pinned(bool turn, char** board, int pieceY, int pieceX){
 	board[pieceY][pieceX] = saved;
 	
 	return kingInCheck;
+}
+
+//-------- SQUARE ATTACK CHECK (for castling) --------
+//temporarily places a king of the given side on (row,col) and checks if
+//that square is under attack. Restores the board afterward.
+bool is_square_attacked(bool side, char** board, int row, int col){
+	char saved = board[row][col];
+	board[row][col] = side ? 'K' : 'k';
+	
+	bool attacked = false;
+	check_det(side, board, attacked);
+	
+	board[row][col] = saved;
+	return attacked;
 }
 
 //-------- MOVE LEGALITY FILTER --------
@@ -636,6 +661,29 @@ bool isBlackPiece(char c){
 	return false;
 }
 
+//-------- EN PASSANT TRACKING (file-scope) --------
+static bool ep_active = false;
+static int  ep_col    = -1;
+
+//-------- CASTLING TRACKING (file-scope) --------
+static bool wKingMoved  = false;
+static bool wRookKMoved = false;
+static bool wRookQMoved = false;
+static bool bKingMoved  = false;
+static bool bRookKMoved = false;
+static bool bRookQMoved = false;
+
+//-------- UNDO HISTORY (file-scope) --------
+struct MoveRecord {
+	char boardSnap[8][8];
+	bool turnSnap;
+	bool wKM, wRKM, wRQM, bKM, bRKM, bRQM;
+	bool epActive; int epCol;
+	int lmFR, lmFC, lmTR, lmTC;
+	int selR, selC;
+};
+static vector<MoveRecord> undoHistory;
+
 //new func 
 void clicked( RenderWindow& window ,char** board, int mouseX , int mouseY , bool& mouseClicked , bool& turn, bool checkCapture[8][8]){
 	if (mouseX < 0 || mouseX >= width || mouseY < 0 || mouseY >= height) return;
@@ -643,26 +691,23 @@ void clicked( RenderWindow& window ,char** board, int mouseX , int mouseY , bool
 	static int last_mouseY = 0 , last_mouseX = 0 ;
 	static char last_clicked_piece = ' ';
 	
-	//en passant tracking
-	//ep_active: was the last move a double pawn push?
-	//ep_col: column (after board rotation) where that pawn landed
-	static bool ep_active = false;
-	static int  ep_col    = -1;
-	
-	//-------- CASTLING TRACKING --------
-	//these flags track if the king or rooks have ever moved
-	//white uses W prefix, black uses B prefix
-	static bool wKingMoved  = false;
-	static bool wRookKMoved = false; //white kingside  rook (col 7 before rotation)
-	static bool wRookQMoved = false; //white queenside rook (col 0 before rotation)
-	static bool bKingMoved  = false;
-	static bool bRookKMoved = false; //black kingside  rook
-	static bool bRookQMoved = false;
-	
-	
 	//MOVE
 	//checking validity of move and then move it wuhahahahaha!!!!!!!!!!
 	if(board[mouseY][mouseX] == 'O' || checkCapture[mouseY][mouseX]){
+		
+		//-------- SAVE STATE FOR UNDO before executing the move --------
+		{
+			MoveRecord rec;
+			for(int r=0;r<8;r++) for(int c=0;c<8;c++) rec.boardSnap[r][c] = board[r][c];
+			rec.turnSnap = turn;
+			rec.wKM = wKingMoved; rec.wRKM = wRookKMoved; rec.wRQM = wRookQMoved;
+			rec.bKM = bKingMoved; rec.bRKM = bRookKMoved; rec.bRQM = bRookQMoved;
+			rec.epActive = ep_active; rec.epCol = ep_col;
+			rec.lmFR = lastMoveFromRow; rec.lmFC = lastMoveFromCol;
+			rec.lmTR = lastMoveToRow;   rec.lmTC = lastMoveToCol;
+			rec.selR = selectedRow; rec.selC = selectedCol;
+			undoHistory.push_back(rec);
+		}
 		
 		//-------- EN PASSANT CAPTURE detection --------
 		//if a pawn moved diagonally onto an empty 'O' square, it is an en passant capture
@@ -726,7 +771,7 @@ void clicked( RenderWindow& window ,char** board, int mouseX , int mouseY , bool
 		//after rotation the column flips: width-1-mouseX
 		if( (last_clicked_piece == 'P' || last_clicked_piece == 'p') && last_mouseY == 6 && mouseY == 4){
 			ep_active = true;
-			ep_col    = width - 1 - mouseX;  //column after board rotation
+			ep_col    = ROTATE_BOARD ? (width - 1 - mouseX) : mouseX;
 		}
 		else{
 			ep_active = false;
@@ -735,11 +780,20 @@ void clicked( RenderWindow& window ,char** board, int mouseX , int mouseY , bool
 		
 		//-------- LAST MOVE HIGHLIGHT update --------
 		//store where the piece came from and where it went
-		//these get rotated with the board below, so store the rotated coords
-		lastMoveFromRow = height - 1 - last_mouseY;
-		lastMoveFromCol = width  - 1 - last_mouseX;
-		lastMoveToRow   = height - 1 - mouseY;
-		lastMoveToCol   = width  - 1 - mouseX;
+		if(ROTATE_BOARD){
+			//these get rotated with the board below, so store the rotated coords
+			lastMoveFromRow = height - 1 - last_mouseY;
+			lastMoveFromCol = width  - 1 - last_mouseX;
+			lastMoveToRow   = height - 1 - mouseY;
+			lastMoveToCol   = width  - 1 - mouseX;
+		}
+		else{
+			//no rotation: highlight stays at the actual board coords
+			lastMoveFromRow = last_mouseY;
+			lastMoveFromCol = last_mouseX;
+			lastMoveToRow   = mouseY;
+			lastMoveToCol   = mouseX;
+		}
 		
 		//clear selection since the move is done
 		selectedRow = -1;
@@ -755,39 +809,43 @@ void clicked( RenderWindow& window ,char** board, int mouseX , int mouseY , bool
 		}
 		
 		//-------- PAWN PROMOTION CHECK --------
-		//if a pawn just landed on row 0, it reached the end -> promotion needed!
-		if( (last_clicked_piece == 'P' || last_clicked_piece == 'p') && mouseY == 0){
-			promotionPending = true;
-			promotionRow = mouseY;
-			promotionCol = mouseX;
-			promotionTurn = turn;
-			//dont rotate or switch turn yet, wait for player to pick a piece
-			return;
+		//with rotation both sides promote at row 0; without rotation white promotes
+		//at row 0 and black promotes at row 7
+		{
+			bool isPromotion = false;
+			if(ROTATE_BOARD){
+				isPromotion = (last_clicked_piece == 'P' || last_clicked_piece == 'p') && mouseY == 0;
+			} else {
+				isPromotion = (last_clicked_piece == 'P' && mouseY == 0) || (last_clicked_piece == 'p' && mouseY == 7);
+			}
+			if(isPromotion){
+				promotionPending = true;
+				promotionRow = mouseY;
+				promotionCol = mouseX;
+				promotionTurn = turn;
+				//dont rotate or switch turn yet, wait for player to pick a piece
+				return;
+			}
 		}
 		
 		turn = !turn;
 	
 		//Rotating the matrix for next person's turn!!!!! :yum:
-		
-		
-		//	----------------successfull ATTEMPT TO ROTATE A MATRIX 180 DEGREE-----------------------------------
-		
-		
-		char temp[height][width];
-		
-		for(int i=0 ; i<height ; i++){
-			for(int j=0 ; j<width ; j++){
-				temp[i][j] = board[height-1-i][width-1-j];
+		if(ROTATE_BOARD){
+			char temp[height][width];
+			
+			for(int i=0 ; i<height ; i++){
+				for(int j=0 ; j<width ; j++){
+					temp[i][j] = board[height-1-i][width-1-j];
+					}
 				}
-			}
-		
-		for(int i=0 ; i<height ; i++){
-			for(int j=0 ; j<width ; j++){
-				board[i][j] = temp[i][j];
+			
+			for(int i=0 ; i<height ; i++){
+				for(int j=0 ; j<width ; j++){
+					board[i][j] = temp[i][j];
+					}
 				}
-			}
-		
-		
+		}
 		
 		return;
 		
@@ -1304,16 +1362,23 @@ void clicked( RenderWindow& window ,char** board, int mouseX , int mouseY , bool
 			//-------- CASTLING for WHITE king --------
 			//king must be on its starting square (row 7, col 4) and not have moved
 			//the path squares must be empty, and the rook must not have moved
-			if(mouseY == 7 && mouseX == 4 && !wKingMoved){
+			//king cannot castle out of check, through check, or into check
+			if(mouseY == 7 && mouseX == 4 && !wKingMoved && !is_square_attacked(true, board, 7, 4)){
 				
 				//kingside: col 5 and col 6 must be empty, rook at col 7 must not have moved
+				//king passes through col 5 and lands on col 6 - both must not be attacked
 				if(!wRookKMoved && board[7][7] == 'R' && board[7][5] == ' ' && board[7][6] == ' '){
-					board[7][6] = 'O';
+					if(!is_square_attacked(true, board, 7, 5) && !is_square_attacked(true, board, 7, 6)){
+						board[7][6] = 'O';
+					}
 				}
 				
 				//queenside: col 3, col 2, col 1 must be empty, rook at col 0 must not have moved
+				//king passes through col 3 and lands on col 2 - both must not be attacked
 				if(!wRookQMoved && board[7][0] == 'R' && board[7][3] == ' ' && board[7][2] == ' ' && board[7][1] == ' '){
-					board[7][2] = 'O';
+					if(!is_square_attacked(true, board, 7, 3) && !is_square_attacked(true, board, 7, 2)){
+						board[7][2] = 'O';
+					}
 				}
 			}
 		
@@ -1822,16 +1887,21 @@ void clicked( RenderWindow& window ,char** board, int mouseX , int mouseY , bool
 
 			//-------- CASTLING for BLACK king --------
 			//same logic as white but uses bKingMoved / bRookKMoved / bRookQMoved
-			if(mouseY == 7 && mouseX == 4 && !bKingMoved){
+			//king cannot castle out of check, through check, or into check
+			if(mouseY == 7 && mouseX == 4 && !bKingMoved && !is_square_attacked(false, board, 7, 4)){
 				
 				//kingside
 				if(!bRookKMoved && board[7][7] == 'r' && board[7][5] == ' ' && board[7][6] == ' '){
-					board[7][6] = 'O';
+					if(!is_square_attacked(false, board, 7, 5) && !is_square_attacked(false, board, 7, 6)){
+						board[7][6] = 'O';
+					}
 				}
 				
 				//queenside
 				if(!bRookQMoved && board[7][0] == 'r' && board[7][3] == ' ' && board[7][2] == ' ' && board[7][1] == ' '){
-					board[7][2] = 'O';
+					if(!is_square_attacked(false, board, 7, 3) && !is_square_attacked(false, board, 7, 2)){
+						board[7][2] = 'O';
+					}
 				}
 			}
 
@@ -1984,6 +2054,7 @@ int main(){
 							turn = !turn;
 							
 							char temp[height][width];
+							if(ROTATE_BOARD){
 							for(int i=0 ; i<height ; i++){
 								for(int j=0 ; j<width ; j++){
 									temp[i][j] = board[height-1-i][width-1-j];
@@ -1993,6 +2064,7 @@ int main(){
 								for(int j=0 ; j<width ; j++){
 									board[i][j] = temp[i][j];
 								}
+							}
 							}
 						}
 					}
@@ -2014,6 +2086,40 @@ int main(){
 		if (Keyboard::isKeyPressed(Keyboard::Escape))
 		{
 			window.close();
+		}
+		
+		//-------- UNDO (press Z) --------
+		//restores the game to the state before the last move
+		{
+			static bool zWasPressed = false;
+			bool zNow = Keyboard::isKeyPressed(Keyboard::Z);
+			if(zNow && !zWasPressed && !undoHistory.empty() && !promotionPending){
+				MoveRecord& rec = undoHistory.back();
+				
+				//restore board
+				for(int r=0;r<8;r++) for(int c=0;c<8;c++) board[r][c] = rec.boardSnap[r][c];
+				
+				//restore turn and flags
+				turn = rec.turnSnap;
+				wKingMoved = rec.wKM; wRookKMoved = rec.wRKM; wRookQMoved = rec.wRQM;
+				bKingMoved = rec.bKM; bRookKMoved = rec.bRKM; bRookQMoved = rec.bRQM;
+				ep_active = rec.epActive; ep_col = rec.epCol;
+				
+				//restore highlights
+				lastMoveFromRow = rec.lmFR; lastMoveFromCol = rec.lmFC;
+				lastMoveToRow   = rec.lmTR; lastMoveToCol   = rec.lmTC;
+				selectedRow = rec.selR; selectedCol = rec.selC;
+				
+				//clear any displayed move indicators
+				for(int r=0;r<8;r++) for(int c=0;c<8;c++){
+					if(board[r][c] == 'O') board[r][c] = ' ';
+					checkCapture[r][c] = false;
+				}
+				
+				undoHistory.pop_back();
+				isDraw = false;
+			}
+			zWasPressed = zNow;
 		}
 		
 		// King vs King draw check
