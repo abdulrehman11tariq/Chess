@@ -1942,6 +1942,177 @@ bool is_king_vs_king(char** board){
 	return true;
 }
 
+//-------- GAME OVER STATE --------
+static bool gameOver = false;
+static string gameOverMsg = "";
+static string gameOverSub = "";
+
+//-------- HAS ANY LEGAL MOVE --------
+//checks if the side whose turn it is (turn=true->white, turn=false->black)
+//has at least one legal move on the board. Works by copying the board,
+//generating moves for each friendly piece, filtering illegal ones via
+//simulation, and returning true as soon as one legal move is found.
+bool has_any_legal_move(bool turn, char** board){
+	//make a working copy so move generation markers dont pollute the real board
+	char copy[8][8];
+	for(int r=0;r<8;r++) for(int c=0;c<8;c++) copy[r][c] = board[r][c];
+	
+	//also need a char** wrapper for the copy so existing funcs work
+	char* rows[8];
+	for(int r=0;r<8;r++) rows[r] = copy[r];
+	char** bd = rows;
+	
+	for(int pr=0; pr<8; pr++){
+		for(int pc=0; pc<8; pc++){
+			char piece = bd[pr][pc];
+			if(piece == ' ' || piece == 'O') continue;
+			
+			//skip pieces that dont belong to current side
+			if(turn && !isWhitePiece(piece)) continue;
+			if(!turn && !isBlackPiece(piece)) continue;
+			
+			//--- generate moves for this piece on the copy ---
+			//reset copy from original each time
+			for(int r=0;r<8;r++) for(int c=0;c<8;c++) copy[r][c] = board[r][c];
+			
+			bool capArr[8][8] = {};
+			int mY = pr, mX = pc;
+			
+			//--- PAWN ---
+			if(piece == 'P'){
+				if(mY-1>=0 && bd[mY-1][mX]==' '){
+					bd[mY-1][mX]='O';
+					if(mY==6 && bd[mY-2][mX]==' ') bd[mY-2][mX]='O';
+				}
+				if(mY-1>=0 && mX-1>=0 && isBlackPiece(bd[mY-1][mX-1])) capArr[mY-1][mX-1]=true;
+				if(mY-1>=0 && mX+1<8 && isBlackPiece(bd[mY-1][mX+1])) capArr[mY-1][mX+1]=true;
+				if(ep_active && mY==3){
+					if(mX-1==ep_col && mX-1>=0 && bd[3][ep_col]=='p') bd[2][ep_col]='O';
+					if(mX+1==ep_col && mX+1<8  && bd[3][ep_col]=='p') bd[2][ep_col]='O';
+				}
+			}
+			else if(piece == 'p'){
+				if(mY-1>=0 && bd[mY-1][mX]==' '){
+					bd[mY-1][mX]='O';
+					if(mY==6 && bd[mY-2][mX]==' ') bd[mY-2][mX]='O';
+				}
+				if(mY-1>=0 && mX-1>=0 && isWhitePiece(bd[mY-1][mX-1])) capArr[mY-1][mX-1]=true;
+				if(mY-1>=0 && mX+1<8 && isWhitePiece(bd[mY-1][mX+1])) capArr[mY-1][mX+1]=true;
+				if(ep_active && mY==3){
+					if(mX-1==ep_col && mX-1>=0 && bd[3][ep_col]=='P') bd[2][ep_col]='O';
+					if(mX+1==ep_col && mX+1<8  && bd[3][ep_col]=='P') bd[2][ep_col]='O';
+				}
+			}
+			//--- ROOK / QUEEN (straight) ---
+			else if(piece=='R'||piece=='r'||piece=='Q'||piece=='q'){
+				bool isW = isWhitePiece(piece);
+				int dx[]={1,-1,0,0}, dy[]={0,0,1,-1};
+				for(int d=0;d<4;d++){
+					for(int s=1;s<8;s++){
+						int nr=mY+dy[d]*s, nc=mX+dx[d]*s;
+						if(nr<0||nr>=8||nc<0||nc>=8) break;
+						if(bd[nr][nc]==' ') bd[nr][nc]='O';
+						else if((isW && isBlackPiece(bd[nr][nc]))||(!isW && isWhitePiece(bd[nr][nc]))){
+							capArr[nr][nc]=true; break;
+						} else break;
+					}
+				}
+				//if queen, also do diagonals
+				if(piece=='Q'||piece=='q'){
+					int ddx[]={1,-1,1,-1}, ddy[]={1,-1,-1,1};
+					for(int d=0;d<4;d++){
+						for(int s=1;s<8;s++){
+							int nr=mY+ddy[d]*s, nc=mX+ddx[d]*s;
+							if(nr<0||nr>=8||nc<0||nc>=8) break;
+							if(bd[nr][nc]==' ') bd[nr][nc]='O';
+							else if((isW && isBlackPiece(bd[nr][nc]))||(!isW && isWhitePiece(bd[nr][nc]))){
+								capArr[nr][nc]=true; break;
+							} else break;
+						}
+					}
+				}
+			}
+			//--- BISHOP ---
+			else if(piece=='B'||piece=='b'){
+				bool isW = isWhitePiece(piece);
+				int ddx[]={1,-1,1,-1}, ddy[]={1,-1,-1,1};
+				for(int d=0;d<4;d++){
+					for(int s=1;s<8;s++){
+						int nr=mY+ddy[d]*s, nc=mX+ddx[d]*s;
+						if(nr<0||nr>=8||nc<0||nc>=8) break;
+						if(bd[nr][nc]==' ') bd[nr][nc]='O';
+						else if((isW && isBlackPiece(bd[nr][nc]))||(!isW && isWhitePiece(bd[nr][nc]))){
+							capArr[nr][nc]=true; break;
+						} else break;
+					}
+				}
+			}
+			//--- KNIGHT ---
+			else if(piece=='N'||piece=='n'){
+				bool isW = isWhitePiece(piece);
+				int km[8][2]={{-2,-1},{-2,1},{-1,-2},{-1,2},{1,-2},{1,2},{2,-1},{2,1}};
+				for(int m=0;m<8;m++){
+					int nr=mY+km[m][0], nc=mX+km[m][1];
+					if(nr<0||nr>=8||nc<0||nc>=8) continue;
+					if(bd[nr][nc]==' ') bd[nr][nc]='O';
+					else if((isW && isBlackPiece(bd[nr][nc]))||(!isW && isWhitePiece(bd[nr][nc])))
+						capArr[nr][nc]=true;
+				}
+			}
+			//--- KING ---
+			else if(piece=='K'||piece=='k'){
+				bool isW = isWhitePiece(piece);
+				int kd[8][2]={{0,-1},{0,1},{-1,0},{1,0},{1,-1},{1,1},{-1,-1},{-1,1}};
+				for(int d=0;d<8;d++){
+					int nr=mY+kd[d][0], nc=mX+kd[d][1];
+					if(nr<0||nr>=8||nc<0||nc>=8) continue;
+					if(bd[nr][nc]==' ') bd[nr][nc]='O';
+					else if((isW && isBlackPiece(bd[nr][nc]))||(!isW && isWhitePiece(bd[nr][nc])))
+						capArr[nr][nc]=true;
+				}
+				//filter king moves that land in check
+				for(int d=0;d<8;d++){
+					int ty=mY+kd[d][0], tx=mX+kd[d][1];
+					if(ty<0||ty>=8||tx<0||tx>=8) continue;
+					if(bd[ty][tx]=='O'||capArr[ty][tx]){
+						char sDst=bd[ty][tx]; bool wCap=capArr[ty][tx];
+						bd[mY][mX]=' '; bd[ty][tx]=piece;
+						bool chk=false; check_det(isW,bd,chk);
+						bd[mY][mX]=piece; bd[ty][tx]=sDst;
+						if(chk){ if(wCap) capArr[ty][tx]=false; else bd[ty][tx]=' '; }
+					}
+				}
+				//castling moves for legality check
+				if(isW && mY==7 && mX==4 && !wKingMoved && !is_square_attacked(true,bd,7,4)){
+					if(!wRookKMoved && bd[7][7]=='R' && bd[7][5]==' ' && bd[7][6]==' ')
+						if(!is_square_attacked(true,bd,7,5)&&!is_square_attacked(true,bd,7,6)) bd[7][6]='O';
+					if(!wRookQMoved && bd[7][0]=='R' && bd[7][3]==' ' && bd[7][2]==' ' && bd[7][1]==' ')
+						if(!is_square_attacked(true,bd,7,3)&&!is_square_attacked(true,bd,7,2)) bd[7][2]='O';
+				}
+				if(!isW && mY==7 && mX==4 && !bKingMoved && !is_square_attacked(false,bd,7,4)){
+					if(!bRookKMoved && bd[7][7]=='r' && bd[7][5]==' ' && bd[7][6]==' ')
+						if(!is_square_attacked(false,bd,7,5)&&!is_square_attacked(false,bd,7,6)) bd[7][6]='O';
+					if(!bRookQMoved && bd[7][0]=='r' && bd[7][3]==' ' && bd[7][2]==' ' && bd[7][1]==' ')
+						if(!is_square_attacked(false,bd,7,3)&&!is_square_attacked(false,bd,7,2)) bd[7][2]='O';
+				}
+			}
+			
+			//--- filter illegal moves for non-king pieces ---
+			if(piece!='K' && piece!='k'){
+				filter_illegal_moves(turn, bd, capArr, mY, mX);
+			}
+			
+			//--- check if any move survived ---
+			for(int r=0;r<8;r++){
+				for(int c=0;c<8;c++){
+					if(bd[r][c]=='O' || capArr[r][c]) return true;
+				}
+			}
+		}
+	}
+	return false;
+}
+
 int main(){
 	
 	Texture bgTexture;
@@ -2030,6 +2201,22 @@ int main(){
 		check_det(true,  board, whiteInCheck);
 		check_det(false, board, blackInCheck);
 		
+		//-------- CHECKMATE / STALEMATE DETECTION --------
+		if(!gameOver && !promotionPending && !isDraw){
+			bool currentInCheck = turn ? whiteInCheck : blackInCheck;
+			if(!has_any_legal_move(turn, board)){
+				gameOver = true;
+				if(currentInCheck){
+					gameOverMsg = "CHECKMATE";
+					gameOverSub = turn ? "Black Wins!" : "White Wins!";
+				} else {
+					gameOverMsg = "STALEMATE";
+					gameOverSub = "Draw  -  No Legal Moves";
+					isDraw = true;
+				}
+			}
+		}
+		
 		
 		while (window.pollEvent(ev))
 		{
@@ -2073,7 +2260,7 @@ int main(){
 					x= (ev.mouseButton.x - boarder_width) / ((window_width - 2*boarder_width) / width);
 					y= (ev.mouseButton.y - boarder_height) / ((window_height - 2*boarder_height) / height);
 					
-					if(!isDraw)
+					if(!isDraw && !gameOver)
 					clicked( window, board, x , y , mouseClicked , turn , checkCapture);
 					
 					}
@@ -2118,6 +2305,9 @@ int main(){
 				
 				undoHistory.pop_back();
 				isDraw = false;
+				gameOver = false;
+				gameOverMsg = "";
+				gameOverSub = "";
 			}
 			zWasPressed = zNow;
 		}
@@ -2161,47 +2351,49 @@ int main(){
 			draw_promotion_menu(window, promotionTurn);
 		}
 		
-		// -------- DRAW OVERLAY --------
-		if(isDraw){
+		// -------- GAME OVER / DRAW OVERLAY --------
+		if(isDraw || gameOver){
 			// Dark semi-transparent overlay
 			RectangleShape overlay(Vector2f(window_width, window_height));
 			overlay.setFillColor(Color(0, 0, 0, 170));
 			window.draw(overlay);
 			
-			// "DRAW" banner box
-			RectangleShape banner(Vector2f(560, 180));
-			banner.setOrigin(280, 90);
+			// banner box
+			RectangleShape banner(Vector2f(620, 180));
+			banner.setOrigin(310, 90);
 			banner.setPosition(window_width / 2.f, window_height / 2.f - 40);
 			banner.setFillColor(Color(30, 30, 30, 230));
 			banner.setOutlineColor(Color(200, 200, 200, 255));
 			banner.setOutlineThickness(3.f);
 			window.draw(banner);
 			
-			// "DRAW" text
-			static Font drawFont;
-			static bool fontLoaded = false;
-			if(!fontLoaded){
-				// Try common system fonts; fall back gracefully if none found
-				if(!drawFont.loadFromFile("C:/Windows/Fonts/arialbd.ttf"))
-					drawFont.loadFromFile("C:/Windows/Fonts/arial.ttf");
-				fontLoaded = true;
+			static Font endFont;
+			static bool endFontLoaded = false;
+			if(!endFontLoaded){
+				if(!endFont.loadFromFile("C:/Windows/Fonts/arialbd.ttf"))
+					endFont.loadFromFile("C:/Windows/Fonts/arial.ttf");
+				endFontLoaded = true;
 			}
 			
-			Text drawText;
-			drawText.setFont(drawFont);
-			drawText.setString("DRAW");
-			drawText.setCharacterSize(100);
-			drawText.setFillColor(Color(220, 220, 220, 255));
-			drawText.setStyle(Text::Bold);
-			FloatRect tb = drawText.getLocalBounds();
-			drawText.setOrigin(tb.left + tb.width/2.f, tb.top + tb.height/2.f);
-			drawText.setPosition(window_width / 2.f, window_height / 2.f - 55);
-			window.draw(drawText);
+			// main text (CHECKMATE / STALEMATE / DRAW)
+			string mainMsg = gameOver ? gameOverMsg : "DRAW";
+			string subMsg  = gameOver ? gameOverSub : "King vs King  -  Insufficient Material";
+			
+			Text mainText;
+			mainText.setFont(endFont);
+			mainText.setString(mainMsg);
+			mainText.setCharacterSize(gameOver && gameOverMsg == "CHECKMATE" ? 80 : 100);
+			mainText.setFillColor(Color(220, 220, 220, 255));
+			mainText.setStyle(Text::Bold);
+			FloatRect tb = mainText.getLocalBounds();
+			mainText.setOrigin(tb.left + tb.width/2.f, tb.top + tb.height/2.f);
+			mainText.setPosition(window_width / 2.f, window_height / 2.f - 55);
+			window.draw(mainText);
 			
 			// subtitle
 			Text subText;
-			subText.setFont(drawFont);
-			subText.setString("King vs King  -  Insufficient Material");
+			subText.setFont(endFont);
+			subText.setString(subMsg);
 			subText.setCharacterSize(26);
 			subText.setFillColor(Color(180, 180, 180, 210));
 			FloatRect sb = subText.getLocalBounds();
