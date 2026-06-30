@@ -6,6 +6,8 @@
 #include <iostream>
 #include <fstream>
 #include <cmath>
+#include <string>
+#include <sstream>
 #include <vector>
 #include <SFML/Graphics.hpp>
 #include <SFML/Audio.hpp>
@@ -673,6 +675,118 @@ static bool bKingMoved  = false;
 static bool bRookKMoved = false;
 static bool bRookQMoved = false;
 
+//-------- FORWARD DECLARATIONS (needed for notation) --------
+void check_det(bool turn, char** board, bool& isCheck);
+bool has_any_legal_move(bool turn, char** board);
+bool isWhitePiece(char c);
+bool isBlackPiece(char c);
+
+//-------- NOTATION TRACKING (file-scope) --------
+//stores all move notations in order: index 0 = white move 1, index 1 = black move 1, etc.
+static vector<string> notationLog;
+static int moveNumber = 1; //increments after every black move (full move counter)
+
+//helper: converts a board column (0-7) to a file letter (a-h)
+//when the board is rotated, the absolute column is flipped
+char colToFile(int col, bool isRotated){
+	int absCol = isRotated ? (7 - col) : col;
+	return 'a' + absCol;
+}
+
+//helper: converts a board row (0-7) to a rank number (1-8)
+//row 0 is rank 8 normally, but when rotated we flip
+int rowToRank(int row, bool isRotated){
+	int absRow = isRotated ? (7 - row) : row;
+	return 8 - absRow;
+}
+
+//helper: returns the piece letter for notation (K, Q, R, B, N)
+//pawns return empty string
+string pieceToLetter(char piece){
+	char upper = piece;
+	if(piece >= 'a' && piece <= 'z') upper = piece - 32; //to uppercase
+	
+	if(upper == 'K') return "K";
+	else if(upper == 'Q') return "Q";
+	else if(upper == 'R') return "R";
+	else if(upper == 'B') return "B";
+	else if(upper == 'N') return "N";
+	return ""; //pawn has no letter
+}
+
+//builds the notation string for a move
+//called BEFORE the board is rotated, right after the move is executed on the board
+//destPiece is what was on the destination before the move (for capture detection)
+string build_notation(char piece, int fromRow, int fromCol, int toRow, int toCol,
+					   char destPiece, bool isEP, bool isCastleK, bool isCastleQ,
+					   bool isPromo, char promoChoice, bool turn, char** board){
+	
+	//castling notation (still need to check for +/# at the end)
+	string notation = "";
+	if(isCastleK){ notation = "O-O"; }
+	else if(isCastleQ){ notation = "O-O-O"; }
+	else{
+		//when ROTATE_BOARD is on, white plays on standard board, black plays on flipped board
+		//so we only flip coords when its blacks turn with rotation enabled
+		bool isFlipped = ROTATE_BOARD && !turn;
+		
+		//piece letter (pawns have none)
+		notation += pieceToLetter(piece);
+		
+		//for pawns: if capturing, add the source file before 'x'
+		bool isCapture = (destPiece != ' ' && destPiece != 'O') || isEP;
+		if(notation == "" && isCapture){
+			//pawn capture: add source file
+			notation += colToFile(fromCol, isFlipped);
+		}
+		
+		//capture symbol
+		if(isCapture) notation += "x";
+		
+		//destination square (file + rank)
+		notation += colToFile(toCol, isFlipped);
+		notation += to_string(rowToRank(toRow, isFlipped));
+		
+		//promotion suffix
+		if(isPromo){
+			notation += "=";
+			notation += pieceToLetter(promoChoice);
+		}
+	}
+	
+	//check and checkmate detection on the board AFTER the move
+	//the move has already been executed, so we check the opponent's king
+	//check_det scans the whole board so orientation doesnt matter
+	bool oppInCheck = false;
+	check_det(!turn, board, oppInCheck);
+	
+	if(oppInCheck){
+		//has_any_legal_move expects the checked side at the bottom
+		//since the board hasnt been rotated yet, temporarily flip it
+		if(ROTATE_BOARD){
+			char tempB[8][8];
+			for(int r=0;r<8;r++) for(int c=0;c<8;c++) tempB[r][c] = board[7-r][7-c];
+			for(int r=0;r<8;r++) for(int c=0;c<8;c++) board[r][c] = tempB[r][c];
+		}
+		
+		bool oppHasMoves = has_any_legal_move(!turn, board);
+		
+		//rotate back
+		if(ROTATE_BOARD){
+			char tempB[8][8];
+			for(int r=0;r<8;r++) for(int c=0;c<8;c++) tempB[r][c] = board[7-r][7-c];
+			for(int r=0;r<8;r++) for(int c=0;c<8;c++) board[r][c] = tempB[r][c];
+		}
+		
+		if(!oppHasMoves)
+			notation += "#";
+		else
+			notation += "+";
+	}
+	
+	return notation;
+}
+
 //-------- UNDO HISTORY (file-scope) --------
 struct MoveRecord {
 	char boardSnap[8][8];
@@ -681,6 +795,7 @@ struct MoveRecord {
 	bool epActive; int epCol;
 	int lmFR, lmFC, lmTR, lmTC;
 	int selR, selC;
+	int savedMoveNumber; //for undo
 };
 static vector<MoveRecord> undoHistory;
 
@@ -706,8 +821,12 @@ void clicked( RenderWindow& window ,char** board, int mouseX , int mouseY , bool
 			rec.lmFR = lastMoveFromRow; rec.lmFC = lastMoveFromCol;
 			rec.lmTR = lastMoveToRow;   rec.lmTC = lastMoveToCol;
 			rec.selR = selectedRow; rec.selC = selectedCol;
+			rec.savedMoveNumber = moveNumber;
 			undoHistory.push_back(rec);
 		}
+		
+		//save what was on the destination BEFORE the move (for capture detection in notation)
+		char destBeforeMove = board[mouseY][mouseX];
 		
 		//-------- EN PASSANT CAPTURE detection --------
 		//if a pawn moved diagonally onto an empty 'O' square, it is an en passant capture
@@ -824,7 +943,34 @@ void clicked( RenderWindow& window ,char** board, int mouseX , int mouseY , bool
 				promotionCol = mouseX;
 				promotionTurn = turn;
 				//dont rotate or switch turn yet, wait for player to pick a piece
+				//notation will be built after the player picks a piece (in main event loop)
 				return;
+			}
+		}
+		
+		//-------- BUILD NOTATION for this move --------
+		{
+			//detect castling from the king move
+			bool castleK = false, castleQ = false;
+			if((last_clicked_piece == 'K' || last_clicked_piece == 'k') && last_mouseX == 4 && last_mouseY == 7){
+				if(mouseX == 6 && mouseY == 7) castleK = true;
+				if(mouseX == 2 && mouseY == 7) castleQ = true;
+			}
+			
+			string moveNotation = build_notation(
+				last_clicked_piece, last_mouseY, last_mouseX, mouseY, mouseX,
+				destBeforeMove, isEnPassantCapture, castleK, castleQ,
+				false, ' ', turn, board
+			);
+			
+			notationLog.push_back(moveNotation);
+			
+			//print to console: "1. e4" for white, "1... e5" for black
+			if(turn){
+				cout << moveNumber << ". " << moveNotation;
+			} else {
+				cout << "  " << moveNotation << endl;
+				moveNumber++;
 			}
 		}
 		
@@ -2237,6 +2383,42 @@ int main(){
 							board[promotionRow][promotionCol] = chosen;
 							promotionPending = false;
 							
+							//-------- BUILD PROMOTION NOTATION --------
+							//the pawn move info was saved in the undo record; we use lastMove coords
+							//since the move already happened, we reconstruct from saved state
+							{
+								MoveRecord& lastRec = undoHistory.back();
+								//find where the pawn was (from the saved board snapshot vs current)
+								int fromR = -1, fromC = -1;
+								char pawnChar = promotionTurn ? 'P' : 'p';
+								for(int r=0;r<8 && fromR<0;r++){
+									for(int c=0;c<8;c++){
+										if(lastRec.boardSnap[r][c] == pawnChar && board[r][c] != pawnChar){
+											fromR = r; fromC = c; break;
+										}
+									}
+								}
+								
+								//detect if it was a capture
+								char destBefore = lastRec.boardSnap[promotionRow][promotionCol];
+								
+								string promoNotation = build_notation(
+									pawnChar, fromR >= 0 ? fromR : 0, fromC >= 0 ? fromC : 0,
+									promotionRow, promotionCol,
+									destBefore, false, false, false,
+									true, chosen, promotionTurn, board
+								);
+								
+								notationLog.push_back(promoNotation);
+								
+								if(promotionTurn){
+									cout << moveNumber << ". " << promoNotation;
+								} else {
+									cout << "  " << promoNotation << endl;
+									moveNumber++;
+								}
+							}
+							
 							//now do the turn switch and rotation that was delayed
 							turn = !turn;
 							
@@ -2302,6 +2484,10 @@ int main(){
 					if(board[r][c] == 'O') board[r][c] = ' ';
 					checkCapture[r][c] = false;
 				}
+				
+				//restore move number and remove last notation entry
+				moveNumber = rec.savedMoveNumber;
+				if(!notationLog.empty()) notationLog.pop_back();
 				
 				undoHistory.pop_back();
 				isDraw = false;
