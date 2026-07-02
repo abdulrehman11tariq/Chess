@@ -1,5 +1,4 @@
 // menu
-// an option to see the chess notations alongside the game on right side of the board
 // integrating an already made AI engine to evaluate the game(with an option of suggesting moves)
 // sounds and haptics, also an option to change sounds and haptics into memes
  
