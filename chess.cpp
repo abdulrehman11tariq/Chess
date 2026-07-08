@@ -2335,11 +2335,61 @@ int main(){
 	RenderWindow window(VideoMode(window_width , window_height ), "!!CHESS!!" , Style::Resize);
 	window.setFramerateLimit(60);
 	
+	//-------- MENU IMAGE SETUP --------
+	Texture menuTexture;
+	menuTexture.loadFromFile("assets/Static_menu.png");
+	Sprite menuSprite(menuTexture);
+	//scale from original 2048x2048 image to the 1050x1050 window
+	float menuScaleX = (float)window_width  / (float)menuTexture.getSize().x;
+	float menuScaleY = (float)window_height / (float)menuTexture.getSize().y;
+	menuSprite.setScale(menuScaleX, menuScaleY);
+	
+	//button hit regions (original image pixel coords scaled to window)
+	//PLAY button: original (713,745) to (1335,934)
+	float playLeft   = 713.f  * menuScaleX;
+	float playTop    = 745.f  * menuScaleY;
+	float playRight  = 1335.f * menuScaleX;
+	float playBottom = 934.f  * menuScaleY;
+	//EXIT button: original (713,1213) to (1335,1403)
+	float exitLeft   = 713.f  * menuScaleX;
+	float exitTop    = 1213.f * menuScaleY;
+	float exitRight  = 1335.f * menuScaleX;
+	float exitBottom = 1403.f * menuScaleY;
+	
+	bool inMenu = true;
 	
 	Event ev;
 	//game loop
 	while(window.isOpen()){
 	
+		//-------- MENU SCREEN --------
+		if(inMenu){
+			while(window.pollEvent(ev)){
+				if(ev.type == Event::Closed){
+					window.close();
+				}
+				if(ev.type == Event::MouseButtonPressed && ev.mouseButton.button == Mouse::Button::Left){
+					float mx = (float)ev.mouseButton.x;
+					float my = (float)ev.mouseButton.y;
+					//PLAY button clicked
+					if(mx >= playLeft && mx <= playRight && my >= playTop && my <= playBottom){
+						inMenu = false;
+					}
+					//EXIT button clicked
+					if(mx >= exitLeft && mx <= exitRight && my >= exitTop && my <= exitBottom){
+						window.close();
+					}
+				}
+			}
+			if(Keyboard::isKeyPressed(Keyboard::Escape)){
+				window.close();
+			}
+			window.clear();
+			window.draw(menuSprite);
+			window.display();
+			continue; //skip the rest of the game loop while in menu
+		}
+		
 		//check dettection!!! both king all the time
 		whiteInCheck = false;
 		blackInCheck = false;
