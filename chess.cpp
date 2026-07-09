@@ -219,6 +219,7 @@ void display_board(RenderWindow& window, char** board , bool checkCapture[height
 
 //check detection
 void check_det( bool turn , char** board , bool& isCheck){
+	isCheck = false;
 	
 	char king = turn ? 'K' : 'k';
 	int kingX=0 , kingY=0;
@@ -674,11 +675,8 @@ static bool bKingMoved  = false;
 static bool bRookKMoved = false;
 static bool bRookQMoved = false;
 
-//-------- FORWARD DECLARATIONS (needed for notation) --------
-void check_det(bool turn, char** board, bool& isCheck);
+//-------- FORWARD DECLARATION (needed for notation) --------
 bool has_any_legal_move(bool turn, char** board);
-bool isWhitePiece(char c);
-bool isBlackPiece(char c);
 
 //-------- NOTATION TRACKING (file-scope) --------
 //stores all move notations in order: index 0 = white move 1, index 1 = black move 1, etc.
@@ -884,6 +882,20 @@ void clicked( RenderWindow& window ,char** board, int mouseX , int mouseY , bool
 			if(last_clicked_piece == 'r' && last_mouseX == 0 && last_mouseY == 7) bRookQMoved = true;
 		}
 		
+		//-------- ROOK CAPTURE invalidates castling rights --------
+		//if a move CAPTURES a rook sitting on its starting square, revoke that side's castling
+		//with ROTATE_BOARD, after rotation the opponent's back rank is row 0
+		//but at this point the board hasn't rotated yet, so opponent's back rank is row 0
+		if(turn == 1){
+			//white just moved, may have captured a black rook at row 0
+			if(mouseY == 0 && mouseX == 7) bRookKMoved = true;
+			if(mouseY == 0 && mouseX == 0) bRookQMoved = true;
+		} else {
+			//black just moved, may have captured a white rook at row 0
+			if(mouseY == 0 && mouseX == 7) wRookKMoved = true;
+			if(mouseY == 0 && mouseX == 0) wRookQMoved = true;
+		}
+		
 		//-------- EN PASSANT STATE UPDATE --------
 		//check if a pawn just did a double push from row 6 to row 4
 		//after rotation the column flips: width-1-mouseX
@@ -999,6 +1011,9 @@ void clicked( RenderWindow& window ,char** board, int mouseX , int mouseY , bool
 	//clear selection highlight (moving to new piece or clicking empty)
 	selectedRow = -1;
 	selectedCol = -1;
+	
+	//reset last clicked piece so stale data cant cause issues
+	last_clicked_piece = ' ';
 	
 	//deleting old valid move and capture
 	for(int i=0 ; i<height ; i++){
@@ -2547,8 +2562,9 @@ int main(){
 			zWasPressed = zNow;
 		}
 		
-		// King vs King draw check
-		isDraw = is_king_vs_king(board);
+		// King vs King draw check (only when game is not already over)
+		if(!gameOver)
+			isDraw = is_king_vs_king(board);
 		
 		window.clear();
 		//background
