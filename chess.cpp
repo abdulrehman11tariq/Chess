@@ -2359,23 +2359,71 @@ int main(){
 	float menuScaleY = (float)window_height / (float)menuTexture.getSize().y;
 	menuSprite.setScale(menuScaleX, menuScaleY);
 	
+	//-------- OPTIONS MENU IMAGE SETUP --------
+	Texture optionsTexture;
+	optionsTexture.loadFromFile("assets/menu_option.png");
+	Sprite optionsSprite(optionsTexture);
+	//scale from original 2048x2048 options image to the 1050x1050 window
+	float optScaleX = (float)window_width  / (float)optionsTexture.getSize().x;
+	float optScaleY = (float)window_height / (float)optionsTexture.getSize().y;
+	optionsSprite.setScale(optScaleX, optScaleY);
+	
 	//button hit regions (original image pixel coords scaled to window)
 	//PLAY button: original (713,745) to (1335,934)
 	float playLeft   = 713.f  * menuScaleX;
 	float playTop    = 745.f  * menuScaleY;
 	float playRight  = 1335.f * menuScaleX;
 	float playBottom = 934.f  * menuScaleY;
+	//OPTIONS button: original (713,978) to (1335,1168)
+	float optLeft   = 713.f  * menuScaleX;
+	float optTop    = 978.f  * menuScaleY;
+	float optRight  = 1335.f * menuScaleX;
+	float optBottom = 1168.f * menuScaleY;
 	//EXIT button: original (713,1213) to (1335,1403)
 	float exitLeft   = 713.f  * menuScaleX;
 	float exitTop    = 1213.f * menuScaleY;
 	float exitRight  = 1335.f * menuScaleX;
 	float exitBottom = 1403.f * menuScaleY;
 	
+	//-------- OPTIONS MENU BUTTON HIT REGIONS (original 2048x2048 coords) --------
+	//BACK button on the options screen: original (713,1390) to (1335,1530)
+	float backLeft   = 713.f  * optScaleX;
+	float backTop    = 1390.f * optScaleY;
+	float backRight  = 1335.f * optScaleX;
+	float backBottom = 1530.f * optScaleY;
+	
 	bool inMenu = true;
+	bool inOptions = false;
 	
 	Event ev;
 	//game loop
 	while(window.isOpen()){
+	
+		//-------- OPTIONS SCREEN --------
+		if(inOptions){
+			while(window.pollEvent(ev)){
+				if(ev.type == Event::Closed){
+					window.close();
+				}
+				if(ev.type == Event::MouseButtonPressed && ev.mouseButton.button == Mouse::Button::Left){
+					float mx = (float)ev.mouseButton.x;
+					float my = (float)ev.mouseButton.y;
+					//BACK button clicked -> return to main menu
+					if(mx >= backLeft && mx <= backRight && my >= backTop && my <= backBottom){
+						inOptions = false;
+						inMenu = true;
+					}
+				}
+			}
+			if(Keyboard::isKeyPressed(Keyboard::Escape)){
+				inOptions = false;
+				inMenu = true;
+			}
+			window.clear();
+			window.draw(optionsSprite);
+			window.display();
+			continue; //skip the rest of the game loop while in options
+		}
 	
 		//-------- MENU SCREEN --------
 		if(inMenu){
@@ -2389,6 +2437,11 @@ int main(){
 					//PLAY button clicked
 					if(mx >= playLeft && mx <= playRight && my >= playTop && my <= playBottom){
 						inMenu = false;
+					}
+					//OPTIONS button clicked -> go to options screen
+					if(mx >= optLeft && mx <= optRight && my >= optTop && my <= optBottom){
+						inMenu = false;
+						inOptions = true;
 					}
 					//EXIT button clicked
 					if(mx >= exitLeft && mx <= exitRight && my >= exitTop && my <= exitBottom){
