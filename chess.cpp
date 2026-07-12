@@ -1,4 +1,3 @@
-// menu
 // integrating an already made AI engine to evaluate the game(with an option of suggesting moves)
 // sounds and haptics, also an option to change sounds and haptics into memes
  
@@ -19,7 +18,17 @@ using namespace  sf;
 //-------- BOARD ROTATION TOGGLE --------
 //set to true to rotate the board 180 after every move (original behavior)
 //set to false to keep the board fixed (white always at bottom)
-const bool ROTATE_BOARD = true;
+static bool ROTATE_BOARD = true;
+
+//-------- OPTIONS SETTINGS --------
+static bool musicEnabled  = true;   //background music on/off
+static bool soundsEnabled = true;   //game sound effects on/off
+static bool undoEnabled   = true;   //undo functionality on/off
+
+//-------- MOVE SOUND TRIGGER --------
+//set to true when a move/capture is executed; main loop plays the sound
+static bool pendingMoveSound = false;
+static bool pendingCaptureSound = false;
 
 //-------- SELECTION & LAST MOVE HIGHLIGHT TRACKING --------
 //these track which tile is currently selected and what the last move was
@@ -986,6 +995,10 @@ void clicked( RenderWindow& window ,char** board, int mouseX , int mouseY , bool
 		}
 		
 		turn = !turn;
+		pendingMoveSound = true;
+		//flag capture for sound if destination was occupied
+		if(destBeforeMove != ' ' && destBeforeMove != 'O') pendingCaptureSound = true;
+		if(isEnPassantCapture) pendingCaptureSound = true;
 	
 		//Rotating the matrix for next person's turn!!!!! :yum:
 		if(ROTATE_BOARD){
@@ -2386,6 +2399,26 @@ int main(){
 	float exitBottom = 1403.f * menuScaleY;
 	
 	//-------- OPTIONS MENU BUTTON HIT REGIONS (original 2048x2048 coords) --------
+	//MUSIC button: original ~(713, 700) to (1335, 840)
+	float musicLeft   = 713.f  * optScaleX;
+	float musicTop    = 700.f  * optScaleY;
+	float musicRight  = 1335.f * optScaleX;
+	float musicBottom = 840.f  * optScaleY;
+	//SOUNDS button: original ~(713, 870) to (1335, 1010)
+	float soundsLeft   = 713.f  * optScaleX;
+	float soundsTop    = 870.f  * optScaleY;
+	float soundsRight  = 1335.f * optScaleX;
+	float soundsBottom = 1010.f * optScaleY;
+	//BOARD ROTATION button: original ~(713, 1040) to (1335, 1180)
+	float rotLeft   = 713.f  * optScaleX;
+	float rotTop    = 1040.f * optScaleY;
+	float rotRight  = 1335.f * optScaleX;
+	float rotBottom = 1180.f * optScaleY;
+	//UNDO button: original ~(713, 1210) to (1335, 1350)
+	float undoBtnLeft   = 713.f  * optScaleX;
+	float undoBtnTop    = 1210.f * optScaleY;
+	float undoBtnRight  = 1335.f * optScaleX;
+	float undoBtnBottom = 1350.f * optScaleY;
 	//BACK button on the options screen: original (713,1390) to (1335,1530)
 	float backLeft   = 713.f  * optScaleX;
 	float backTop    = 1390.f * optScaleY;
@@ -2394,6 +2427,36 @@ int main(){
 	
 	bool inMenu = true;
 	bool inOptions = false;
+	
+	//-------- SOUND EFFECTS SETUP --------
+	sf::SoundBuffer moveBuf, checkBuf, checkmateBuf, drawBuf;
+	moveBuf.loadFromFile("assets/Sounds/move.mp3");
+	checkBuf.loadFromFile("assets/Sounds/check.mp3");
+	checkmateBuf.loadFromFile("assets/Sounds/checkmate.mp3");
+	drawBuf.loadFromFile("assets/Sounds/draw.wav");
+	
+	sf::Sound moveSound(moveBuf);
+	sf::Sound checkSound(checkBuf);
+	sf::Sound checkmateSound(checkmateBuf);
+	sf::Sound drawSound(drawBuf);
+	
+	moveSound.setVolume(100.f);
+	checkSound.setVolume(100.f);
+	checkmateSound.setVolume(45.f);
+	drawSound.setVolume(45.f);
+	
+	//-------- BACKGROUND MUSIC SETUP --------
+	sf::Music bgMusic;
+	if(bgMusic.openFromFile("assets/Sounds/bg_music.mp3")){
+		bgMusic.setLoop(true);
+		bgMusic.setVolume(30.f);
+		if(musicEnabled) bgMusic.play();
+	}
+	
+	//track previous check/gameOver state to trigger sounds once
+	bool prevWhiteCheck = false, prevBlackCheck = false;
+	bool prevGameOver = false;
+	bool prevDraw = false;
 	
 	Event ev;
 	//game loop
@@ -2408,6 +2471,37 @@ int main(){
 				if(ev.type == Event::MouseButtonPressed && ev.mouseButton.button == Mouse::Button::Left){
 					float mx = (float)ev.mouseButton.x;
 					float my = (float)ev.mouseButton.y;
+					
+					//MUSIC button clicked -> toggle background music
+					if(mx >= musicLeft && mx <= musicRight && my >= musicTop && my <= musicBottom){
+						musicEnabled = !musicEnabled;
+						if(musicEnabled){
+							if(bgMusic.getStatus() != sf::Music::Playing)
+								bgMusic.play();
+						} else {
+							bgMusic.pause();
+						}
+						cout << "Music: " << (musicEnabled ? "ON" : "OFF") << endl;
+					}
+					
+					//SOUNDS button clicked -> toggle game sound effects
+					if(mx >= soundsLeft && mx <= soundsRight && my >= soundsTop && my <= soundsBottom){
+						soundsEnabled = !soundsEnabled;
+						cout << "Sounds: " << (soundsEnabled ? "ON" : "OFF") << endl;
+					}
+					
+					//BOARD ROTATION button clicked -> toggle board rotation
+					if(mx >= rotLeft && mx <= rotRight && my >= rotTop && my <= rotBottom){
+						ROTATE_BOARD = !ROTATE_BOARD;
+						cout << "Board Rotation: " << (ROTATE_BOARD ? "ON" : "OFF") << endl;
+					}
+					
+					//UNDO button clicked -> toggle undo functionality
+					if(mx >= undoBtnLeft && mx <= undoBtnRight && my >= undoBtnTop && my <= undoBtnBottom){
+						undoEnabled = !undoEnabled;
+						cout << "Undo: " << (undoEnabled ? "ON" : "OFF") << endl;
+					}
+					
 					//BACK button clicked -> return to main menu
 					if(mx >= backLeft && mx <= backRight && my >= backTop && my <= backBottom){
 						inOptions = false;
@@ -2421,6 +2515,25 @@ int main(){
 			}
 			window.clear();
 			window.draw(optionsSprite);
+			
+			//-------- DRAW GREEN HIGHLIGHT on enabled options --------
+			{
+				auto drawEnabledHighlight = [&](float left, float top, float right, float bottom, bool enabled){
+					if(!enabled) return;
+					RectangleShape highlight(Vector2f(right - left, bottom - top));
+					highlight.setPosition(left, top);
+					highlight.setFillColor(Color(50, 200, 50, 65));
+					highlight.setOutlineColor(Color(80, 255, 80, 120));
+					highlight.setOutlineThickness(2.f);
+					window.draw(highlight);
+				};
+				
+				drawEnabledHighlight(musicLeft, musicTop, musicRight, musicBottom, musicEnabled);
+				drawEnabledHighlight(soundsLeft, soundsTop, soundsRight, soundsBottom, soundsEnabled);
+				drawEnabledHighlight(rotLeft, rotTop, rotRight, rotBottom, ROTATE_BOARD);
+				drawEnabledHighlight(undoBtnLeft, undoBtnTop, undoBtnRight, undoBtnBottom, undoEnabled);
+			}
+			
 			window.display();
 			continue; //skip the rest of the game loop while in options
 		}
@@ -2538,6 +2651,7 @@ int main(){
 							
 							//now do the turn switch and rotation that was delayed
 							turn = !turn;
+							pendingMoveSound = true;
 							
 							char temp[height][width];
 							if(ROTATE_BOARD){
@@ -2575,11 +2689,11 @@ int main(){
 		}
 		
 		//-------- UNDO (press Z) --------
-		//restores the game to the state before the last move
+		//restores the game to the state before the last move (only if undo is enabled)
 		{
 			static bool zWasPressed = false;
 			bool zNow = Keyboard::isKeyPressed(Keyboard::Z);
-			if(zNow && !zWasPressed && !undoHistory.empty() && !promotionPending){
+			if(zNow && !zWasPressed && undoEnabled && !undoHistory.empty() && !promotionPending){
 				MoveRecord& rec = undoHistory.back();
 				
 				//restore board
@@ -2618,6 +2732,40 @@ int main(){
 		// King vs King draw check (only when game is not already over)
 		if(!gameOver)
 			isDraw = is_king_vs_king(board);
+		
+		//-------- SOUND EFFECTS TRIGGERS --------
+		if(soundsEnabled){
+			//move / capture sound
+			if(pendingMoveSound){
+				moveSound.play();
+				pendingMoveSound = false;
+				pendingCaptureSound = false; //move sound covers capture too
+			}
+			//checkmate / stalemate sound (play once)
+			if(gameOver && !prevGameOver){
+				if(gameOverMsg == "CHECKMATE")
+					checkmateSound.play();
+			}
+			//draw sound (play once)
+			if(isDraw && !prevDraw){
+				drawSound.play();
+			}
+			//check sound (play once per new check state)
+			if(!gameOver && !isDraw){
+				if(whiteInCheck && !prevWhiteCheck)
+					checkSound.play();
+				if(blackInCheck && !prevBlackCheck)
+					checkSound.play();
+			}
+		} else {
+			//sounds disabled: just clear pending flags
+			pendingMoveSound = false;
+			pendingCaptureSound = false;
+		}
+		prevWhiteCheck = whiteInCheck;
+		prevBlackCheck = blackInCheck;
+		prevGameOver = gameOver;
+		prevDraw = isDraw;
 		
 		window.clear();
 		//background
