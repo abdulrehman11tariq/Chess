@@ -15,23 +15,16 @@
 using namespace std;
 using namespace  sf;
 
-//-------- BOARD ROTATION TOGGLE --------
-//set to true to rotate the board 180 after every move (original behavior)
-//set to false to keep the board fixed (white always at bottom)
+
 static bool ROTATE_BOARD = true;
 
-//-------- OPTIONS SETTINGS --------
-static bool musicEnabled  = true;   //background music on/off
-static bool soundsEnabled = true;   //game sound effects on/off
-static bool undoEnabled   = true;   //undo functionality on/off
+static bool musicEnabled = true;	
+static bool soundsEnabled = true;   
+static bool undoEnabled   = true;   
 
-//-------- MOVE SOUND TRIGGER --------
-//set to true when a move/capture is executed; main loop plays the sound
 static bool pendingMoveSound = false;
 static bool pendingCaptureSound = false;
 
-//-------- SELECTION & LAST MOVE HIGHLIGHT TRACKING --------
-//these track which tile is currently selected and what the last move was
 static int  selectedRow = -1, selectedCol = -1; //tile of the piece the player clicked
 static int  lastMoveFromRow = -1, lastMoveFromCol = -1; //where the last piece came from
 static int  lastMoveToRow   = -1, lastMoveToCol   = -1; //where the last piece went to
@@ -247,17 +240,35 @@ void check_det( bool turn , char** board , bool& isCheck){
 	
 	
 	//pawn check
-	if(kingY-1 >=0 && kingX+1 < width){
-		if(board[kingY-1][kingX+1] == 'P' + pcsCorrection){
-			isCheck = true;
-			return;
+	//with ROTATE_BOARD on, both sides always face each other from the top (kingY-1)
+	//with ROTATE_BOARD off, white pawns attack upward (row-1) and black pawns attack downward (row+1)
+	//when turn==true we check for enemy (black) pawns; when turn==false we check for enemy (white) pawns
+	{
+		int pawnDir;
+		if(ROTATE_BOARD){
+			pawnDir = -1; //enemy pawns always above with rotation
+		} else {
+			//turn==true means checking white king for black pawn attacks (black pawns move down, attack from kingY-1 perspective... no)
+			//black pawns are at the top and attack downward, so they threaten squares BELOW them = kingY-1 means pawn at kingY-1 attacks kingY
+			//wait: a pawn at row R attacks row R+dir. White pawns attack upward (R-1). Black pawns without rotation attack downward (R+1).
+			//so an enemy pawn threatens the king if the pawn is at kingY+dir where dir is the pawn's attack direction inverted.
+			//White checking for black pawns: black pawns attack DOWN (row+1), so pawn at kingY-1 attacks king. dir = -1
+			//Black checking for white pawns: white pawns attack UP (row-1), so pawn at kingY+1 attacks king. dir = +1
+			pawnDir = turn ? -1 : 1;
 		}
-	}
-	
-	if(kingY-1 >=0 && kingX-1 >= 0){
-		if(board[kingY-1][kingX-1] == 'P' + pcsCorrection){
-			isCheck = true;
-			return;
+		int pawnRow = kingY + pawnDir;
+		if(pawnRow >= 0 && pawnRow < height && kingX+1 < width){
+			if(board[pawnRow][kingX+1] == 'P' + pcsCorrection){
+				isCheck = true;
+				return;
+			}
+		}
+		
+		if(pawnRow >= 0 && pawnRow < height && kingX-1 >= 0){
+			if(board[pawnRow][kingX-1] == 'P' + pcsCorrection){
+				isCheck = true;
+				return;
+			}
 		}
 	}
 	
@@ -496,13 +507,10 @@ bool is_square_attacked(bool side, char** board, int row, int col){
 	return attacked;
 }
 
-//-------- MOVE LEGALITY FILTER --------
-//after generating moves for a non-king piece, remove any move that would
-//leave the own king in check. This handles:
-//  - absolute pins (piece cant move if it exposes king)
-//  - single check evasion (only blocking / capturing the checker survives)
-//  - double check (no non-king move can resolve two checks at once)
-//  - discovered checks are naturally handled by the attacker side
+// absolute pins
+//  single check 
+//  double check 
+// discovered checks
 void filter_illegal_moves(bool turn, char** board, bool checkCapture[8][8], int pieceY, int pieceX){
 	char piece = board[pieceY][pieceX];
 	
@@ -518,7 +526,7 @@ void filter_illegal_moves(bool turn, char** board, bool checkCapture[8][8], int 
 			board[r][c] = piece;
 			board[pieceY][pieceX] = ' ';
 			
-			//en passant: pawn moved diagonally to an empty 'O' square
+			//EN PASSANTTTTT: pawn moved diagonally to an empty 'O' square
 			//the captured pawn sits at (pieceY, c) - same row as source, dest column
 			char savedEP = ' ';
 			bool isEP = false;
@@ -549,11 +557,10 @@ void filter_illegal_moves(bool turn, char** board, bool checkCapture[8][8], int 
 }
 
 //-------- PAWN PROMOTION STATE --------
-//these track whether a promotion choice is pending
 static bool promotionPending = false;
 static int  promotionRow = -1;
 static int  promotionCol = -1;
-static bool promotionTurn = true; //which side is promoting
+static bool promotionTurn = true; //which side is promoting	B/W
 
 //draws the promotion selection popup on screen
 void draw_promotion_menu(RenderWindow& window, bool turn){
@@ -577,11 +584,12 @@ void draw_promotion_menu(RenderWindow& window, bool turn){
 	window.draw(popupBg);
 	
 	//the 4 piece options: Queen, Rook, Bishop, Knight
-	//load textures (static so only once)
 	static Texture promoWQ, promoWR, promoWB, promoWN;
 	static Texture promoBQ, promoBR, promoBB, promoBN;
 	static bool promoTexLoaded = false;
 	if(!promoTexLoaded){
+	
+		
 		promoWQ.loadFromFile("assets/White/queen.png");
 		promoWR.loadFromFile("assets/White/rook.png");
 		promoWB.loadFromFile("assets/White/bishop.png");
@@ -591,15 +599,19 @@ void draw_promotion_menu(RenderWindow& window, bool turn){
 		promoBB.loadFromFile("assets/Black/bishop.png");
 		promoBN.loadFromFile("assets/Black/knight.png");
 		promoTexLoaded = true;
+	
 	}
 	
 	Sprite pieces[4];
 	if(turn == 1){
+	
 		pieces[0].setTexture(promoWQ);
 		pieces[1].setTexture(promoWR);
 		pieces[2].setTexture(promoWB);
 		pieces[3].setTexture(promoWN);
+	
 	}
+
 	else{
 		pieces[0].setTexture(promoBQ);
 		pieces[1].setTexture(promoBR);
@@ -771,8 +783,8 @@ string build_notation(char piece, int fromRow, int fromCol, int toRow, int toCol
 		//since the board hasnt been rotated yet, temporarily flip it
 		if(ROTATE_BOARD){
 			char tempB[8][8];
-			for(int r=0;r<8;r++) for(int c=0;c<8;c++) tempB[r][c] = board[7-r][7-c];
-			for(int r=0;r<8;r++) for(int c=0;c<8;c++) board[r][c] = tempB[r][c];
+			for(int r=0 ; r<8 ; r++)  for(int c=0 ; c<8 ; c++)  tempB[r][c] = board[7-r][7-c];
+			for(int r=0 ; r<8 ; r++)  for(int c=0 ; c<8 ; c++)  board[r][c] = tempB[r][c];
 		}
 		
 		bool oppHasMoves = has_any_legal_move(!turn, board);
@@ -780,8 +792,8 @@ string build_notation(char piece, int fromRow, int fromCol, int toRow, int toCol
 		//rotate back
 		if(ROTATE_BOARD){
 			char tempB[8][8];
-			for(int r=0;r<8;r++) for(int c=0;c<8;c++) tempB[r][c] = board[7-r][7-c];
-			for(int r=0;r<8;r++) for(int c=0;c<8;c++) board[r][c] = tempB[r][c];
+			for(int r=0 ; r<8 ; r++)  for(int c=0 ; c<8 ; c++)  tempB[r][c] = board[7-r][7-c];
+			for(int r=0 ; r<8 ; r++)  for(int c=0 ; c<8 ; c++)  board[r][c] = tempB[r][c];
 		}
 		
 		if(!oppHasMoves)
@@ -797,8 +809,13 @@ string build_notation(char piece, int fromRow, int fromCol, int toRow, int toCol
 struct MoveRecord {
 	char boardSnap[8][8];
 	bool turnSnap;
-	bool wKM, wRKM, wRQM, bKM, bRKM, bRQM;
-	bool epActive; int epCol;
+	
+	bool wKM, wRKM, wRQM;
+	bool bKM, bRKM, bRQM;
+	
+	bool epActive;
+	int epCol;
+	
 	int lmFR, lmFC, lmTR, lmTC;
 	int selR, selC;
 	int savedMoveNumber; //for undo
@@ -819,14 +836,16 @@ void clicked( RenderWindow& window ,char** board, int mouseX , int mouseY , bool
 		//-------- SAVE STATE FOR UNDO before executing the move --------
 		{
 			MoveRecord rec;
-			for(int r=0;r<8;r++) for(int c=0;c<8;c++) rec.boardSnap[r][c] = board[r][c];
+			for(int r=0 ; r<8 ; r++)  for(int c=0 ; c<8 ; c++)  rec.boardSnap[r][c] = board[r][c];
+			
 			rec.turnSnap = turn;
-			rec.wKM = wKingMoved; rec.wRKM = wRookKMoved; rec.wRQM = wRookQMoved;
-			rec.bKM = bKingMoved; rec.bRKM = bRookKMoved; rec.bRQM = bRookQMoved;
-			rec.epActive = ep_active; rec.epCol = ep_col;
-			rec.lmFR = lastMoveFromRow; rec.lmFC = lastMoveFromCol;
-			rec.lmTR = lastMoveToRow;   rec.lmTC = lastMoveToCol;
-			rec.selR = selectedRow; rec.selC = selectedCol;
+			rec.wKM = wKingMoved;  rec.wRKM = wRookKMoved;  rec.wRQM = wRookQMoved;
+			rec.bKM = bKingMoved;  rec.bRKM = bRookKMoved;  rec.bRQM = bRookQMoved;
+			rec.epActive = ep_active;  rec.epCol = ep_col;
+			
+			rec.lmFR = lastMoveFromRow;  rec.lmFC = lastMoveFromCol;
+			rec.lmTR = lastMoveToRow;    rec.lmTC = lastMoveToCol;
+			rec.selR = selectedRow;  rec.selC = selectedCol;
 			rec.savedMoveNumber = moveNumber;
 			undoHistory.push_back(rec);
 		}
@@ -2126,163 +2145,213 @@ static string gameOverSub = "";
 //generating moves for each friendly piece, filtering illegal ones via
 //simulation, and returning true as soon as one legal move is found.
 bool has_any_legal_move(bool turn, char** board){
+	
 	//make a working copy so move generation markers dont pollute the real board
 	char copy[8][8];
-	for(int r=0;r<8;r++) for(int c=0;c<8;c++) copy[r][c] = board[r][c];
+	for(int r=0 ; r<8 ; r++)  for(int c=0 ; c<8 ; c++)  copy[r][c] = board[r][c];
 	
 	//also need a char** wrapper for the copy so existing funcs work
 	char* rows[8];
-	for(int r=0;r<8;r++) rows[r] = copy[r];
+	for(int r=0 ; r<8 ; r++)  rows[r] = copy[r];
 	char** bd = rows;
 	
-	for(int pr=0; pr<8; pr++){
-		for(int pc=0; pc<8; pc++){
+	
+	for(int pr=0 ; pr<8 ; pr++){
+		for(int pc=0 ; pc<8 ; pc++){
+			
 			char piece = bd[pr][pc];
 			if(piece == ' ' || piece == 'O') continue;
 			
 			//skip pieces that dont belong to current side
-			if(turn && !isWhitePiece(piece)) continue;
+			if(turn  && !isWhitePiece(piece)) continue;
 			if(!turn && !isBlackPiece(piece)) continue;
 			
 			//--- generate moves for this piece on the copy ---
 			//reset copy from original each time
-			for(int r=0;r<8;r++) for(int c=0;c<8;c++) copy[r][c] = board[r][c];
+			for(int r=0 ; r<8 ; r++)  for(int c=0 ; c<8 ; c++)  copy[r][c] = board[r][c];
 			
 			bool capArr[8][8] = {};
-			int mY = pr, mX = pc;
+			int mY = pr , mX = pc;
+			
 			
 			//--- PAWN ---
 			if(piece == 'P'){
-				if(mY-1>=0 && bd[mY-1][mX]==' '){
-					bd[mY-1][mX]='O';
-					if(mY==6 && bd[mY-2][mX]==' ') bd[mY-2][mX]='O';
+				
+				if(mY-1 >= 0  &&  bd[mY-1][mX] == ' '){
+					bd[mY-1][mX] = 'O';
+					if(mY == 6  &&  bd[mY-2][mX] == ' ')  bd[mY-2][mX] = 'O';
 				}
-				if(mY-1>=0 && mX-1>=0 && isBlackPiece(bd[mY-1][mX-1])) capArr[mY-1][mX-1]=true;
-				if(mY-1>=0 && mX+1<8 && isBlackPiece(bd[mY-1][mX+1])) capArr[mY-1][mX+1]=true;
-				if(ep_active && mY==3){
-					if(mX-1==ep_col && mX-1>=0 && bd[3][ep_col]=='p') bd[2][ep_col]='O';
-					if(mX+1==ep_col && mX+1<8  && bd[3][ep_col]=='p') bd[2][ep_col]='O';
+				
+				if(mY-1 >= 0  &&  mX-1 >= 0  &&  isBlackPiece(bd[mY-1][mX-1]))  capArr[mY-1][mX-1] = true;
+				if(mY-1 >= 0  &&  mX+1 < 8   &&  isBlackPiece(bd[mY-1][mX+1]))  capArr[mY-1][mX+1] = true;
+				
+				if(ep_active  &&  mY == 3){
+					if(mX-1 == ep_col  &&  mX-1 >= 0  &&  bd[3][ep_col] == 'p')  bd[2][ep_col] = 'O';
+					if(mX+1 == ep_col  &&  mX+1 < 8   &&  bd[3][ep_col] == 'p')  bd[2][ep_col] = 'O';
 				}
 			}
+			
 			else if(piece == 'p'){
-				if(mY-1>=0 && bd[mY-1][mX]==' '){
-					bd[mY-1][mX]='O';
-					if(mY==6 && bd[mY-2][mX]==' ') bd[mY-2][mX]='O';
+				
+				if(mY-1 >= 0  &&  bd[mY-1][mX] == ' '){
+					bd[mY-1][mX] = 'O';
+					if(mY == 6  &&  bd[mY-2][mX] == ' ')  bd[mY-2][mX] = 'O';
 				}
-				if(mY-1>=0 && mX-1>=0 && isWhitePiece(bd[mY-1][mX-1])) capArr[mY-1][mX-1]=true;
-				if(mY-1>=0 && mX+1<8 && isWhitePiece(bd[mY-1][mX+1])) capArr[mY-1][mX+1]=true;
-				if(ep_active && mY==3){
-					if(mX-1==ep_col && mX-1>=0 && bd[3][ep_col]=='P') bd[2][ep_col]='O';
-					if(mX+1==ep_col && mX+1<8  && bd[3][ep_col]=='P') bd[2][ep_col]='O';
+				
+				if(mY-1 >= 0  &&  mX-1 >= 0  &&  isWhitePiece(bd[mY-1][mX-1]))  capArr[mY-1][mX-1] = true;
+				if(mY-1 >= 0  &&  mX+1 < 8   &&  isWhitePiece(bd[mY-1][mX+1]))  capArr[mY-1][mX+1] = true;
+				
+				if(ep_active  &&  mY == 3){
+					if(mX-1 == ep_col  &&  mX-1 >= 0  &&  bd[3][ep_col] == 'P')  bd[2][ep_col] = 'O';
+					if(mX+1 == ep_col  &&  mX+1 < 8   &&  bd[3][ep_col] == 'P')  bd[2][ep_col] = 'O';
 				}
 			}
+			
 			//--- ROOK / QUEEN (straight) ---
-			else if(piece=='R'||piece=='r'||piece=='Q'||piece=='q'){
+			else if(piece == 'R' || piece == 'r' || piece == 'Q' || piece == 'q'){
+				
 				bool isW = isWhitePiece(piece);
-				int dx[]={1,-1,0,0}, dy[]={0,0,1,-1};
-				for(int d=0;d<4;d++){
-					for(int s=1;s<8;s++){
-						int nr=mY+dy[d]*s, nc=mX+dx[d]*s;
-						if(nr<0||nr>=8||nc<0||nc>=8) break;
-						if(bd[nr][nc]==' ') bd[nr][nc]='O';
-						else if((isW && isBlackPiece(bd[nr][nc]))||(!isW && isWhitePiece(bd[nr][nc]))){
-							capArr[nr][nc]=true; break;
+				int dx[] = {1,-1,0,0} , dy[] = {0,0,1,-1};
+				
+				for(int d=0 ; d<4 ; d++){
+					for(int s=1 ; s<8 ; s++){
+						
+						int nr = mY + dy[d]*s , nc = mX + dx[d]*s;
+						if(nr < 0 || nr >= 8 || nc < 0 || nc >= 8) break;
+						
+						if(bd[nr][nc] == ' ')  bd[nr][nc] = 'O';
+						else if((isW && isBlackPiece(bd[nr][nc])) || (!isW && isWhitePiece(bd[nr][nc]))){
+							capArr[nr][nc] = true; break;
 						} else break;
 					}
 				}
+				
 				//if queen, also do diagonals
-				if(piece=='Q'||piece=='q'){
-					int ddx[]={1,-1,1,-1}, ddy[]={1,-1,-1,1};
-					for(int d=0;d<4;d++){
-						for(int s=1;s<8;s++){
-							int nr=mY+ddy[d]*s, nc=mX+ddx[d]*s;
-							if(nr<0||nr>=8||nc<0||nc>=8) break;
-							if(bd[nr][nc]==' ') bd[nr][nc]='O';
-							else if((isW && isBlackPiece(bd[nr][nc]))||(!isW && isWhitePiece(bd[nr][nc]))){
-								capArr[nr][nc]=true; break;
+				if(piece == 'Q' || piece == 'q'){
+					
+					int ddx[] = {1,-1,1,-1} , ddy[] = {1,-1,-1,1};
+					for(int d=0 ; d<4 ; d++){
+						for(int s=1 ; s<8 ; s++){
+							
+							int nr = mY + ddy[d]*s , nc = mX + ddx[d]*s;
+							if(nr < 0 || nr >= 8 || nc < 0 || nc >= 8) break;
+							
+							if(bd[nr][nc] == ' ')  bd[nr][nc] = 'O';
+							else if((isW && isBlackPiece(bd[nr][nc])) || (!isW && isWhitePiece(bd[nr][nc]))){
+								capArr[nr][nc] = true; break;
 							} else break;
 						}
 					}
 				}
 			}
+			
 			//--- BISHOP ---
-			else if(piece=='B'||piece=='b'){
+			else if(piece == 'B' || piece == 'b'){
+				
 				bool isW = isWhitePiece(piece);
-				int ddx[]={1,-1,1,-1}, ddy[]={1,-1,-1,1};
-				for(int d=0;d<4;d++){
-					for(int s=1;s<8;s++){
-						int nr=mY+ddy[d]*s, nc=mX+ddx[d]*s;
-						if(nr<0||nr>=8||nc<0||nc>=8) break;
-						if(bd[nr][nc]==' ') bd[nr][nc]='O';
-						else if((isW && isBlackPiece(bd[nr][nc]))||(!isW && isWhitePiece(bd[nr][nc]))){
-							capArr[nr][nc]=true; break;
+				int ddx[] = {1,-1,1,-1} , ddy[] = {1,-1,-1,1};
+				
+				for(int d=0 ; d<4 ; d++){
+					for(int s=1 ; s<8 ; s++){
+						
+						int nr = mY + ddy[d]*s , nc = mX + ddx[d]*s;
+						if(nr < 0 || nr >= 8 || nc < 0 || nc >= 8) break;
+						
+						if(bd[nr][nc] == ' ')  bd[nr][nc] = 'O';
+						else if((isW && isBlackPiece(bd[nr][nc])) || (!isW && isWhitePiece(bd[nr][nc]))){
+							capArr[nr][nc] = true; break;
 						} else break;
 					}
 				}
 			}
+			
 			//--- KNIGHT ---
-			else if(piece=='N'||piece=='n'){
+			else if(piece == 'N' || piece == 'n'){
+				
 				bool isW = isWhitePiece(piece);
-				int km[8][2]={{-2,-1},{-2,1},{-1,-2},{-1,2},{1,-2},{1,2},{2,-1},{2,1}};
-				for(int m=0;m<8;m++){
-					int nr=mY+km[m][0], nc=mX+km[m][1];
-					if(nr<0||nr>=8||nc<0||nc>=8) continue;
-					if(bd[nr][nc]==' ') bd[nr][nc]='O';
-					else if((isW && isBlackPiece(bd[nr][nc]))||(!isW && isWhitePiece(bd[nr][nc])))
-						capArr[nr][nc]=true;
-				}
-			}
-			//--- KING ---
-			else if(piece=='K'||piece=='k'){
-				bool isW = isWhitePiece(piece);
-				int kd[8][2]={{0,-1},{0,1},{-1,0},{1,0},{1,-1},{1,1},{-1,-1},{-1,1}};
-				for(int d=0;d<8;d++){
-					int nr=mY+kd[d][0], nc=mX+kd[d][1];
-					if(nr<0||nr>=8||nc<0||nc>=8) continue;
-					if(bd[nr][nc]==' ') bd[nr][nc]='O';
-					else if((isW && isBlackPiece(bd[nr][nc]))||(!isW && isWhitePiece(bd[nr][nc])))
-						capArr[nr][nc]=true;
-				}
-				//filter king moves that land in check
-				for(int d=0;d<8;d++){
-					int ty=mY+kd[d][0], tx=mX+kd[d][1];
-					if(ty<0||ty>=8||tx<0||tx>=8) continue;
-					if(bd[ty][tx]=='O'||capArr[ty][tx]){
-						char sDst=bd[ty][tx]; bool wCap=capArr[ty][tx];
-						bd[mY][mX]=' '; bd[ty][tx]=piece;
-						bool chk=false; check_det(isW,bd,chk);
-						bd[mY][mX]=piece; bd[ty][tx]=sDst;
-						if(chk){ if(wCap) capArr[ty][tx]=false; else bd[ty][tx]=' '; }
-					}
-				}
-				//castling moves for legality check
-				if(isW && mY==7 && mX==4 && !wKingMoved && !is_square_attacked(true,bd,7,4)){
-					if(!wRookKMoved && bd[7][7]=='R' && bd[7][5]==' ' && bd[7][6]==' ')
-						if(!is_square_attacked(true,bd,7,5)&&!is_square_attacked(true,bd,7,6)) bd[7][6]='O';
-					if(!wRookQMoved && bd[7][0]=='R' && bd[7][3]==' ' && bd[7][2]==' ' && bd[7][1]==' ')
-						if(!is_square_attacked(true,bd,7,3)&&!is_square_attacked(true,bd,7,2)) bd[7][2]='O';
-				}
-				if(!isW && mY==7 && mX==4 && !bKingMoved && !is_square_attacked(false,bd,7,4)){
-					if(!bRookKMoved && bd[7][7]=='r' && bd[7][5]==' ' && bd[7][6]==' ')
-						if(!is_square_attacked(false,bd,7,5)&&!is_square_attacked(false,bd,7,6)) bd[7][6]='O';
-					if(!bRookQMoved && bd[7][0]=='r' && bd[7][3]==' ' && bd[7][2]==' ' && bd[7][1]==' ')
-						if(!is_square_attacked(false,bd,7,3)&&!is_square_attacked(false,bd,7,2)) bd[7][2]='O';
+				int km[8][2] = {{-2,-1},{-2,1},{-1,-2},{-1,2},{1,-2},{1,2},{2,-1},{2,1}};
+				
+				for(int m=0 ; m<8 ; m++){
+					
+					int nr = mY + km[m][0] , nc = mX + km[m][1];
+					if(nr < 0 || nr >= 8 || nc < 0 || nc >= 8) continue;
+					
+					if(bd[nr][nc] == ' ')  bd[nr][nc] = 'O';
+					else if((isW && isBlackPiece(bd[nr][nc])) || (!isW && isWhitePiece(bd[nr][nc])))
+						capArr[nr][nc] = true;
 				}
 			}
 			
+			//--- KING ---
+			else if(piece == 'K' || piece == 'k'){
+				
+				bool isW = isWhitePiece(piece);
+				int kd[8][2] = {{0,-1},{0,1},{-1,0},{1,0},{1,-1},{1,1},{-1,-1},{-1,1}};
+				
+				for(int d=0 ; d<8 ; d++){
+					
+					int nr = mY + kd[d][0] , nc = mX + kd[d][1];
+					if(nr < 0 || nr >= 8 || nc < 0 || nc >= 8) continue;
+					
+					if(bd[nr][nc] == ' ')  bd[nr][nc] = 'O';
+					else if((isW && isBlackPiece(bd[nr][nc])) || (!isW && isWhitePiece(bd[nr][nc])))
+						capArr[nr][nc] = true;
+				}
+				
+				//filter king moves that land in check
+				for(int d=0 ; d<8 ; d++){
+					
+					int ty = mY + kd[d][0] , tx = mX + kd[d][1];
+					if(ty < 0 || ty >= 8 || tx < 0 || tx >= 8) continue;
+					
+					if(bd[ty][tx] == 'O' || capArr[ty][tx]){
+						
+						char sDst = bd[ty][tx];  bool wCap = capArr[ty][tx];
+						bd[mY][mX] = ' ';  bd[ty][tx] = piece;
+						
+						bool chk = false;
+						check_det(isW, bd, chk);
+						
+						bd[mY][mX] = piece;  bd[ty][tx] = sDst;
+						if(chk){ if(wCap) capArr[ty][tx] = false; else bd[ty][tx] = ' '; }
+					}
+				}
+				
+				//castling moves for legality check
+				if(isW  &&  mY == 7  &&  mX == 4  &&  !wKingMoved  &&  !is_square_attacked(true, bd, 7, 4)){
+					
+					if(!wRookKMoved  &&  bd[7][7] == 'R'  &&  bd[7][5] == ' '  &&  bd[7][6] == ' ')
+						if(!is_square_attacked(true, bd, 7, 5) && !is_square_attacked(true, bd, 7, 6))  bd[7][6] = 'O';
+					
+					if(!wRookQMoved  &&  bd[7][0] == 'R'  &&  bd[7][3] == ' '  &&  bd[7][2] == ' '  &&  bd[7][1] == ' ')
+						if(!is_square_attacked(true, bd, 7, 3) && !is_square_attacked(true, bd, 7, 2))  bd[7][2] = 'O';
+				}
+				
+				if(!isW  &&  mY == 7  &&  mX == 4  &&  !bKingMoved  &&  !is_square_attacked(false, bd, 7, 4)){
+					
+					if(!bRookKMoved  &&  bd[7][7] == 'r'  &&  bd[7][5] == ' '  &&  bd[7][6] == ' ')
+						if(!is_square_attacked(false, bd, 7, 5) && !is_square_attacked(false, bd, 7, 6))  bd[7][6] = 'O';
+					
+					if(!bRookQMoved  &&  bd[7][0] == 'r'  &&  bd[7][3] == ' '  &&  bd[7][2] == ' '  &&  bd[7][1] == ' ')
+						if(!is_square_attacked(false, bd, 7, 3) && !is_square_attacked(false, bd, 7, 2))  bd[7][2] = 'O';
+				}
+			}
+			
+			
 			//--- filter illegal moves for non-king pieces ---
-			if(piece!='K' && piece!='k'){
+			if(piece != 'K'  &&  piece != 'k'){
 				filter_illegal_moves(turn, bd, capArr, mY, mX);
 			}
 			
 			//--- check if any move survived ---
-			for(int r=0;r<8;r++){
-				for(int c=0;c<8;c++){
-					if(bd[r][c]=='O' || capArr[r][c]) return true;
+			for(int r=0 ; r<8 ; r++){
+				for(int c=0 ; c<8 ; c++){
+					if(bd[r][c] == 'O' || capArr[r][c]) return true;
+					}
 				}
-			}
 		}
 	}
+	
 	return false;
 }
 
@@ -2291,8 +2360,8 @@ int main(){
 	Texture bgTexture;
 	bgTexture.loadFromFile("assets/chessboard.png");
 	Sprite bgSprite(bgTexture);
-	bgSprite.setPosition(0,0);
-	bgSprite.setScale(1.5,1.5);
+	bgSprite.setPosition(0, 0);
+	bgSprite.setScale(1.5, 1.5);
 	
 	
 	
@@ -2308,10 +2377,11 @@ int main(){
 	for(int i=0 ; i<height ; i++){
 		for(int j=0 ; j<width ; j++){
 				checkCapture[i][j] = 0;
-				board[i][j]=' ';
+				board[i][j] = ' ';
+				
 				//CAPITAL FOR WHITE
 				if(i == 1){
-				 board[i][j]='p';
+				 board[i][j] = 'p';
 				 }
 				 
 				else if(i == 6){
@@ -2353,7 +2423,7 @@ int main(){
 	
 	//for mouse pos X Y
 	int x=0 , y=0;
-	bool mouseClicked=false;
+	bool mouseClicked = false;
 	bool turn = 1; //1 for White --- 0 for Black
 	bool isDraw = false;
 	
@@ -2430,6 +2500,7 @@ int main(){
 	
 	//-------- SOUND EFFECTS SETUP --------
 	sf::SoundBuffer moveBuf, checkBuf, checkmateBuf, drawBuf;
+	
 	moveBuf.loadFromFile("assets/Sounds/move.mp3");
 	checkBuf.loadFromFile("assets/Sounds/check.mp3");
 	checkmateBuf.loadFromFile("assets/Sounds/checkmate.mp3");
@@ -2454,11 +2525,13 @@ int main(){
 	}
 	
 	//track previous check/gameOver state to trigger sounds once
-	bool prevWhiteCheck = false, prevBlackCheck = false;
+	bool prevWhiteCheck = false;
+	bool prevBlackCheck = false;
 	bool prevGameOver = false;
 	bool prevDraw = false;
 	
 	Event ev;
+	
 	//game loop
 	while(window.isOpen()){
 	
@@ -2574,8 +2647,10 @@ int main(){
 		//check dettection!!! both king all the time
 		whiteInCheck = false;
 		blackInCheck = false;
-		check_det(true,  board, whiteInCheck);
-		check_det(false, board, blackInCheck);
+		
+		check_det( true,  board, whiteInCheck );
+		check_det( false, board, blackInCheck );
+		
 		
 		//-------- CHECKMATE / STALEMATE DETECTION --------
 		if(!gameOver && !promotionPending && !isDraw){
@@ -2621,10 +2696,10 @@ int main(){
 								//find where the pawn was (from the saved board snapshot vs current)
 								int fromR = -1, fromC = -1;
 								char pawnChar = promotionTurn ? 'P' : 'p';
-								for(int r=0;r<8 && fromR<0;r++){
-									for(int c=0;c<8;c++){
-										if(lastRec.boardSnap[r][c] == pawnChar && board[r][c] != pawnChar){
-											fromR = r; fromC = c; break;
+								for(int r=0 ; r<8  &&  fromR<0 ; r++){
+									for(int c=0 ; c<8 ; c++){
+										if(lastRec.boardSnap[r][c] == pawnChar  &&  board[r][c] != pawnChar){
+											fromR = r;  fromC = c;  break;
 										}
 									}
 								}
@@ -2693,25 +2768,25 @@ int main(){
 		{
 			static bool zWasPressed = false;
 			bool zNow = Keyboard::isKeyPressed(Keyboard::Z);
-			if(zNow && !zWasPressed && undoEnabled && !undoHistory.empty() && !promotionPending){
+			if(zNow  &&  !zWasPressed  &&  undoEnabled  &&  !undoHistory.empty()  &&  !promotionPending){
 				MoveRecord& rec = undoHistory.back();
 				
 				//restore board
-				for(int r=0;r<8;r++) for(int c=0;c<8;c++) board[r][c] = rec.boardSnap[r][c];
+				for(int r=0 ; r<8 ; r++)  for(int c=0 ; c<8 ; c++)  board[r][c] = rec.boardSnap[r][c];
 				
 				//restore turn and flags
 				turn = rec.turnSnap;
-				wKingMoved = rec.wKM; wRookKMoved = rec.wRKM; wRookQMoved = rec.wRQM;
-				bKingMoved = rec.bKM; bRookKMoved = rec.bRKM; bRookQMoved = rec.bRQM;
-				ep_active = rec.epActive; ep_col = rec.epCol;
+				wKingMoved = rec.wKM;  wRookKMoved = rec.wRKM;  wRookQMoved = rec.wRQM;
+				bKingMoved = rec.bKM;  bRookKMoved = rec.bRKM;  bRookQMoved = rec.bRQM;
+				ep_active = rec.epActive;  ep_col = rec.epCol;
 				
 				//restore highlights
-				lastMoveFromRow = rec.lmFR; lastMoveFromCol = rec.lmFC;
-				lastMoveToRow   = rec.lmTR; lastMoveToCol   = rec.lmTC;
-				selectedRow = rec.selR; selectedCol = rec.selC;
+				lastMoveFromRow = rec.lmFR;  lastMoveFromCol = rec.lmFC;
+				lastMoveToRow   = rec.lmTR;  lastMoveToCol   = rec.lmTC;
+				selectedRow = rec.selR;  selectedCol = rec.selC;
 				
 				//clear any displayed move indicators
-				for(int r=0;r<8;r++) for(int c=0;c<8;c++){
+				for(int r=0 ; r<8 ; r++)  for(int c=0 ; c<8 ; c++){
 					if(board[r][c] == 'O') board[r][c] = ' ';
 					checkCapture[r][c] = false;
 				}
@@ -2764,8 +2839,9 @@ int main(){
 		}
 		prevWhiteCheck = whiteInCheck;
 		prevBlackCheck = blackInCheck;
-		prevGameOver = gameOver;
-		prevDraw = isDraw;
+		prevGameOver   = gameOver;
+		prevDraw       = isDraw;
+		
 		
 		window.clear();
 		//background
