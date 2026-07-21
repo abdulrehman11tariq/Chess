@@ -24,7 +24,7 @@ _ _ _
 > Interface & Visuals 
 - Main menu and dedicated Options screen, both image-based with clickable toggles and buttons
 - Move highlighting: selected piece, legal move dots, capture rings, last-move squares (lichess-style), and a red highlight on a king in check with specified sound effects
-- Optional board rotation each turn (view flips to face the current player, like a real board, can commanly be observed in `chess.com`)
+- Optional board rotation each turn (view flips to face the current player, like a real board)
 - Turn indicator and a game-over overlay with result messages
 
 > Quality-of-Life
@@ -59,11 +59,11 @@ _ _ _
 ```Bash
 git clone https://github.com/abdulrehman11tariq/Chess
 ```
-2. Building
+2. Open `Chess.slnx` in Visual Studio 2022.
 
-```bash
-g++ -std=c++17 main.cpp -o chess -lsfml-graphics -lsfml-audio -lsfml-window -lsfml-system
-```
+3. Build and run the project.
+
+Ensure SFML is correctly linked (already included in this repository).
 _ _ _ 
 
 ## ⚠️ Limitations
