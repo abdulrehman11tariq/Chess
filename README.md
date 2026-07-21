@@ -1,15 +1,15 @@
-# CHESS Engine and GUI
+# Chess Engine and GUI
 My love for chess inspired me to build a fully playable two-player chess engine along with its pixel-art Graphical User Interface built in C++ with SFML. The project began in my first semester and continued into my second, requiring significant efforts and time, but I am proud of the final result and the knowledge I gained throughout the development process.
 
 _ _ _
 
-## 🎮Demo
+## 🎮 Demo
 
 
 
 _ _ _
 
-## ✨Features
+## ✨ Features
 
 > Core Chess Rules
 - Display of Full legal-move generation for all six pieces(pawn, rook, knight, bishop, queen, king)
@@ -57,5 +57,17 @@ _ _ _
 1. Clone the repository:
 
 ```Bash
-git clone 
+git clone https://github.com/abdulrehman11tariq/Chess
+```
+2. Building
+
+```bash
+g++ -std=c++17 main.cpp -o chess -lsfml-graphics -lsfml-audio -lsfml-window -lsfml-system
+```
+_ _ _ 
+
+## ⚠️ Limitations
+ 
+- Font loading path is hardcoded to Windows (`C:/Windows/Fonts/...`) — won't work on Linux/macOS without changes
+
  
