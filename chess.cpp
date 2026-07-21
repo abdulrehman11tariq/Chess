@@ -1654,21 +1654,14 @@ void clicked( RenderWindow& window ,char** board, int mouseX , int mouseY , bool
 			}
 
 			//-------- CASTLING for WHITE king --------
-			//king must be on its starting square (row 7, col 4) and not have moved
-			//the path squares must be empty, and the rook must not have moved
-			//king cannot castle out of check, through check, or into check
 			if(mouseY == 7 && mouseX == 4 && !wKingMoved && !is_square_attacked(true, board, 7, 4)){
 				
-				//kingside: col 5 and col 6 must be empty, rook at col 7 must not have moved
-				//king passes through col 5 and lands on col 6 - both must not be attacked
 				if(!wRookKMoved && board[7][7] == 'R' && board[7][5] == ' ' && board[7][6] == ' '){
 					if(!is_square_attacked(true, board, 7, 5) && !is_square_attacked(true, board, 7, 6)){
 						board[7][6] = 'O';
 					}
 				}
 				
-				//queenside: col 3, col 2, col 1 must be empty, rook at col 0 must not have moved
-				//king passes through col 3 and lands on col 2 - both must not be attacked
 				if(!wRookQMoved && board[7][0] == 'R' && board[7][3] == ' ' && board[7][2] == ' ' && board[7][1] == ' '){
 					if(!is_square_attacked(true, board, 7, 3) && !is_square_attacked(true, board, 7, 2)){
 						board[7][2] = 'O';
@@ -1681,63 +1674,89 @@ void clicked( RenderWindow& window ,char** board, int mouseX , int mouseY , bool
 
 	// ------------------------------------------------------------------------------------ KAALA ---------------------------------------------------------------
 	if(turn == 0){
+	
 		// pawn
 		if (board[mouseY][mouseX] == 'p') {
-		last_clicked_piece = 'p';
-			if( mouseY-1 >= 0 && board[mouseY-1][mouseX] == ' ' ){
-				
+			last_clicked_piece = 'p';
+		
+			if( mouseY-1 >= 0 && board[mouseY-1][mouseX] == ' '){
 				board[mouseY-1][mouseX] = 'O';
 				if(mouseY == 6 && board[mouseY-2][mouseX] == ' ' )
 					board[mouseY-2][mouseX] = 'O';
+			
 			}
-		
+			
+			
 			if (mouseY-1 >= 0 && mouseX-1 >= 0) {
 				if(isWhitePiece(board[mouseY-1][mouseX-1]))
+			
 					checkCapture[mouseY-1][mouseX-1] = true;
 			}
 			
 			if (mouseY-1 >= 0 && mouseX+1 < width) {
+				
 				if(isWhitePiece(board[mouseY-1][mouseX+1]))
 					checkCapture[mouseY-1][mouseX+1] = true;
 			}
 			
 			//-------- EN PASSANT for black pawn --------
-			//same logic as white: black pawn must be on row 3, ep_col is the white pawn's column
+		
+			
 			if(ep_active && mouseY == 3){
+			
 				if(mouseX - 1 == ep_col && mouseX - 1 >= 0 && board[3][ep_col] == 'P'){
 					board[2][ep_col] = 'O';
+				
 				}
 				if(mouseX + 1 == ep_col && mouseX + 1 < width && board[3][ep_col] == 'P'){
+				
 					board[2][ep_col] = 'O';
+			
 				}
+
 			}
 
 		}
 
 		// rook
+		
 		if (board[mouseY][mouseX] == 'r') {
-		last_clicked_piece = 'r';
+		
+			last_clicked_piece = 'r';
 			
 			//moves after that peice
+			
 			for(int i=mouseX+1 ; i<width ; i++){
 				
+			
 				if(board[mouseY][i] == ' ')
 					board[mouseY][i] = 'O';
+				
 				else if(isWhitePiece(board[mouseY][i])){
 					checkCapture[mouseY][i] = true;
-					break;}
+				
+					break;
+				
+				}
+				
 				else break;
 				
 				}
 			
 			//moves before that
+			
 			for(int i=mouseX-1 ; i>=0 ; i--){
 				
+			
 				if(board[mouseY][i] == ' ')
 					board[mouseY][i] = 'O';
+				
 				else if(isWhitePiece(board[mouseY][i])){
 					checkCapture[mouseY][i] = true;
+				
 					break;}
+				
+				
 				else break;
 				
 				}
@@ -1747,9 +1766,12 @@ void clicked( RenderWindow& window ,char** board, int mouseX , int mouseY , bool
 				
 				if(board[i][mouseX] == ' ')
 					board[i][mouseX] = 'O';
+				
 				else if(isWhitePiece(board[i][mouseX])){
 					checkCapture[i][mouseX] = true;
+				
 					break;}
+	
 				else break;
 				
 				}
@@ -1759,37 +1781,48 @@ void clicked( RenderWindow& window ,char** board, int mouseX , int mouseY , bool
 				
 				if(board[i][mouseX] == ' ')
 					board[i][mouseX] = 'O';
+				
 				else if(isWhitePiece(board[i][mouseX])){
 					checkCapture[i][mouseX] = true;
+				
 					break;}
+				
 				else break;
 				
 				}
-
-
+				
 		}
 
 		// knight
 		if (board[mouseY][mouseX] == 'n') {
-			last_clicked_piece = 'n';
 		
+			last_clicked_piece = 'n';
+			
 			if(mouseX-1 >= 0  &&  mouseY+2 < height){
+			
 				if(board[mouseY+2][mouseX-1] == ' ')
 					board[mouseY+2][mouseX-1] = 'O';
+				
 				else if(isWhitePiece(board[mouseY+2][mouseX-1]))
 					checkCapture[mouseY+2][mouseX-1] = true;
+			
 			}
 		
 			if(mouseX+1 < width  &&  mouseY+2 < height){
+			
 				if(board[mouseY+2][mouseX+1] == ' ')
 					board[mouseY+2][mouseX+1] = 'O';
+				
 				else if(isWhitePiece(board[mouseY+2][mouseX+1]))
 					checkCapture[mouseY+2][mouseX+1] = true;
+			
 			}
 			
 			if(mouseY-1 >= 0  &&  mouseX+2 < width){
+			
 				if(board[mouseY-1][mouseX+2] == ' ')
 					board[mouseY-1][mouseX+2] = 'O';
+				
 				else if(isWhitePiece(board[mouseY-1][mouseX+2]))
 					checkCapture[mouseY-1][mouseX+2] = true;
 			}
@@ -2140,17 +2173,21 @@ void clicked( RenderWindow& window ,char** board, int mouseX , int mouseY , bool
 	 					}
 					}
 
-			//-------- FILTER OUT KING MOVES THAT LAND IN CHECK --------
-			//for each of the 8 surrounding squares, simulate the king moving there
-			//and check if the king would be in check; if so, remove that move
 			{
+				//-------- CHECK for king moves that would put king in check --------
+
 				int dirs[8][2] = {{0,-1},{0,1},{-1,0},{1,0},{1,-1},{1,1},{-1,-1},{-1,1}};
+				
 				for(int d=0; d<8; d++){
 					int ty = mouseY + dirs[d][0];
 					int tx = mouseX + dirs[d][1];
-					if(ty < 0 || ty >= height || tx < 0 || tx >= width) continue;
 					
+					if(ty < 0 || ty >= height || tx < 0 || tx >= width) continue;
+				
+
+
 					//only check squares where we placed 'O' or marked as capture
+					
 					if(board[ty][tx] == 'O' || checkCapture[ty][tx]){
 						//simulate: remove king from old pos, place king at new pos
 						char savedDst = board[ty][tx];
@@ -2180,20 +2217,23 @@ void clicked( RenderWindow& window ,char** board, int mouseX , int mouseY , bool
 			}
 
 			//-------- CASTLING for BLACK king --------
-			//same logic as white but uses bKingMoved / bRookKMoved / bRookQMoved
-			//king cannot castle out of check, through check, or into check
+			
 			if(mouseY == 7 && mouseX == 4 && !bKingMoved && !is_square_attacked(false, board, 7, 4)){
 				
 				//kingside
+			
 				if(!bRookKMoved && board[7][7] == 'r' && board[7][5] == ' ' && board[7][6] == ' '){
 					if(!is_square_attacked(false, board, 7, 5) && !is_square_attacked(false, board, 7, 6)){
 						board[7][6] = 'O';
 					}
+				
 				}
 				
 				//queenside
+				
 				if(!bRookQMoved && board[7][0] == 'r' && board[7][3] == ' ' && board[7][2] == ' ' && board[7][1] == ' '){
 					if(!is_square_attacked(false, board, 7, 3) && !is_square_attacked(false, board, 7, 2)){
+				
 						board[7][2] = 'O';
 					}
 				}
@@ -2203,9 +2243,10 @@ void clicked( RenderWindow& window ,char** board, int mouseX , int mouseY , bool
 	}
 	
 	//-------- FILTER ILLEGAL MOVES for non-king pieces --------
-	//simulate every generated move; remove any that leave own king in check
+
 	{
 		char pc = board[mouseY][mouseX];
+
 		if(pc != 'K' && pc != 'k' && pc != ' ' && pc != 'O'){
 			filter_illegal_moves(turn, board, checkCapture, mouseY, mouseX);
 		}
@@ -2216,6 +2257,7 @@ void clicked( RenderWindow& window ,char** board, int mouseX , int mouseY , bool
 	mouseClicked = true;
 	
 	//-------- SELECTION HIGHLIGHT update --------
+
 	selectedRow = mouseY;
 	selectedCol = mouseX;
 	
@@ -2225,66 +2267,86 @@ void clicked( RenderWindow& window ,char** board, int mouseX , int mouseY , bool
 //func end
 
 // Returns true when the only pieces left on the board are the two kings
+
 bool is_king_vs_king(char** board){
+
 	for(int i = 0; i < height; i++){
+
 		for(int j = 0; j < width; j++){
 			char p = board[i][j];
+
 			if(p != ' ' && p != 'K' && p != 'k' && p != 'O')
 				return false;
+
 		}
+
 	}
 	return true;
 }
 
+
 //-------- GAME OVER STATE --------
+
 static bool gameOver = false;
+
 static string gameOverMsg = "";
 static string gameOverSub = "";
 
 //-------- HAS ANY LEGAL MOVE --------
-//checks if the side whose turn it is (turn=true->white, turn=false->black)
-//has at least one legal move on the board. Works by copying the board,
-//generating moves for each friendly piece, filtering illegal ones via
-//simulation, and returning true as soon as one legal move is found.
+
+
 bool has_any_legal_move(bool turn, char** board){
-	
-	//make a working copy so move generation markers dont pollute the real board
+
+
 	char copy[8][8];
+
 	for(int r=0 ; r<8 ; r++)  for(int c=0 ; c<8 ; c++)  copy[r][c] = board[r][c];
 	
 	//also need a char** wrapper for the copy so existing funcs work
+
 	char* rows[8];
+
 	for(int r=0 ; r<8 ; r++)  rows[r] = copy[r];
+
 	char** bd = rows;
 	
 	
+
 	for(int pr=0 ; pr<8 ; pr++){
 		for(int pc=0 ; pc<8 ; pc++){
 			
+
 			char piece = bd[pr][pc];
 			if(piece == ' ' || piece == 'O') continue;
 			
+
 			//skip pieces that dont belong to current side
 			if(turn  && !isWhitePiece(piece)) continue;
 			if(!turn && !isBlackPiece(piece)) continue;
-			
+
+
 			//--- generate moves for this piece on the copy ---
-			//reset copy from original each time
+			
 			for(int r=0 ; r<8 ; r++)  for(int c=0 ; c<8 ; c++)  copy[r][c] = board[r][c];
 			
 			bool capArr[8][8] = {};
+
 			int mY = pr , mX = pc;
 			
-			
+
+
 			//--- PAWN ---
 			if(piece == 'P'){
 				
 				if(mY-1 >= 0  &&  bd[mY-1][mX] == ' '){
 					bd[mY-1][mX] = 'O';
+			
 					if(mY == 6  &&  bd[mY-2][mX] == ' ')  bd[mY-2][mX] = 'O';
 				}
 				
+				
 				if(mY-1 >= 0  &&  mX-1 >= 0  &&  isBlackPiece(bd[mY-1][mX-1]))  capArr[mY-1][mX-1] = true;
+				
 				if(mY-1 >= 0  &&  mX+1 < 8   &&  isBlackPiece(bd[mY-1][mX+1]))  capArr[mY-1][mX+1] = true;
 				
 				if(ep_active  &&  mY == 3){
@@ -2296,28 +2358,38 @@ bool has_any_legal_move(bool turn, char** board){
 			else if(piece == 'p'){
 				
 				if(mY-1 >= 0  &&  bd[mY-1][mX] == ' '){
+
 					bd[mY-1][mX] = 'O';
 					if(mY == 6  &&  bd[mY-2][mX] == ' ')  bd[mY-2][mX] = 'O';
 				}
-				
+
+
 				if(mY-1 >= 0  &&  mX-1 >= 0  &&  isWhitePiece(bd[mY-1][mX-1]))  capArr[mY-1][mX-1] = true;
 				if(mY-1 >= 0  &&  mX+1 < 8   &&  isWhitePiece(bd[mY-1][mX+1]))  capArr[mY-1][mX+1] = true;
 				
+
 				if(ep_active  &&  mY == 3){
 					if(mX-1 == ep_col  &&  mX-1 >= 0  &&  bd[3][ep_col] == 'P')  bd[2][ep_col] = 'O';
+				
 					if(mX+1 == ep_col  &&  mX+1 < 8   &&  bd[3][ep_col] == 'P')  bd[2][ep_col] = 'O';
 				}
 			}
 			
-			//--- ROOK / QUEEN (straight) ---
+			//--- ROOK /QUEEN(straight) ---
+			
 			else if(piece == 'R' || piece == 'r' || piece == 'Q' || piece == 'q'){
 				
+
 				bool isW = isWhitePiece(piece);
+
 				int dx[] = {1,-1,0,0} , dy[] = {0,0,1,-1};
-				
+
+
 				for(int d=0 ; d<4 ; d++){
+				
 					for(int s=1 ; s<8 ; s++){
-						
+					
+
 						int nr = mY + dy[d]*s , nc = mX + dx[d]*s;
 						if(nr < 0 || nr >= 8 || nc < 0 || nc >= 8) break;
 						
@@ -2332,102 +2404,142 @@ bool has_any_legal_move(bool turn, char** board){
 				if(piece == 'Q' || piece == 'q'){
 					
 					int ddx[] = {1,-1,1,-1} , ddy[] = {1,-1,-1,1};
+				
 					for(int d=0 ; d<4 ; d++){
+					
 						for(int s=1 ; s<8 ; s++){
 							
 							int nr = mY + ddy[d]*s , nc = mX + ddx[d]*s;
+						
 							if(nr < 0 || nr >= 8 || nc < 0 || nc >= 8) break;
 							
+							
 							if(bd[nr][nc] == ' ')  bd[nr][nc] = 'O';
+							
 							else if((isW && isBlackPiece(bd[nr][nc])) || (!isW && isWhitePiece(bd[nr][nc]))){
+							
 								capArr[nr][nc] = true; break;
-							} else break;
+							} 
+						
+							else break;
+					
 						}
+					
 					}
+			
 				}
+			
 			}
 			
 			//--- BISHOP ---
+		
 			else if(piece == 'B' || piece == 'b'){
 				
 				bool isW = isWhitePiece(piece);
 				int ddx[] = {1,-1,1,-1} , ddy[] = {1,-1,-1,1};
-				
+			
+
 				for(int d=0 ; d<4 ; d++){
+				
 					for(int s=1 ; s<8 ; s++){
 						
 						int nr = mY + ddy[d]*s , nc = mX + ddx[d]*s;
+					
 						if(nr < 0 || nr >= 8 || nc < 0 || nc >= 8) break;
 						
 						if(bd[nr][nc] == ' ')  bd[nr][nc] = 'O';
+						
 						else if((isW && isBlackPiece(bd[nr][nc])) || (!isW && isWhitePiece(bd[nr][nc]))){
 							capArr[nr][nc] = true; break;
+						
 						} else break;
 					}
 				}
 			}
 			
 			//--- KNIGHT ---
+
 			else if(piece == 'N' || piece == 'n'){
 				
+
 				bool isW = isWhitePiece(piece);
 				int km[8][2] = {{-2,-1},{-2,1},{-1,-2},{-1,2},{1,-2},{1,2},{2,-1},{2,1}};
 				
+
 				for(int m=0 ; m<8 ; m++){
 					
 					int nr = mY + km[m][0] , nc = mX + km[m][1];
+
 					if(nr < 0 || nr >= 8 || nc < 0 || nc >= 8) continue;
 					
 					if(bd[nr][nc] == ' ')  bd[nr][nc] = 'O';
+
 					else if((isW && isBlackPiece(bd[nr][nc])) || (!isW && isWhitePiece(bd[nr][nc])))
 						capArr[nr][nc] = true;
 				}
+
 			}
 			
 			//--- KING ---
 			else if(piece == 'K' || piece == 'k'){
-				
+
+
 				bool isW = isWhitePiece(piece);
 				int kd[8][2] = {{0,-1},{0,1},{-1,0},{1,0},{1,-1},{1,1},{-1,-1},{-1,1}};
+				
 				
 				for(int d=0 ; d<8 ; d++){
 					
 					int nr = mY + kd[d][0] , nc = mX + kd[d][1];
 					if(nr < 0 || nr >= 8 || nc < 0 || nc >= 8) continue;
-					
+				
+
 					if(bd[nr][nc] == ' ')  bd[nr][nc] = 'O';
 					else if((isW && isBlackPiece(bd[nr][nc])) || (!isW && isWhitePiece(bd[nr][nc])))
 						capArr[nr][nc] = true;
 				}
+
 				
 				//filter king moves that land in check
 				for(int d=0 ; d<8 ; d++){
-					
+				
+
 					int ty = mY + kd[d][0] , tx = mX + kd[d][1];
 					if(ty < 0 || ty >= 8 || tx < 0 || tx >= 8) continue;
 					
+
 					if(bd[ty][tx] == 'O' || capArr[ty][tx]){
 						
+					
 						char sDst = bd[ty][tx];  bool wCap = capArr[ty][tx];
 						bd[mY][mX] = ' ';  bd[ty][tx] = piece;
 						
+
 						bool chk = false;
+						
 						check_det(isW, bd, chk);
 						
 						bd[mY][mX] = piece;  bd[ty][tx] = sDst;
+						
 						if(chk){ if(wCap) capArr[ty][tx] = false; else bd[ty][tx] = ' '; }
 					}
 				}
+
+				
 				
 				//castling moves for legality check
 				if(isW  &&  mY == 7  &&  mX == 4  &&  !wKingMoved  &&  !is_square_attacked(true, bd, 7, 4)){
-					
+				
+
 					if(!wRookKMoved  &&  bd[7][7] == 'R'  &&  bd[7][5] == ' '  &&  bd[7][6] == ' ')
+					
 						if(!is_square_attacked(true, bd, 7, 5) && !is_square_attacked(true, bd, 7, 6))  bd[7][6] = 'O';
 					
 					if(!wRookQMoved  &&  bd[7][0] == 'R'  &&  bd[7][3] == ' '  &&  bd[7][2] == ' '  &&  bd[7][1] == ' ')
+						
 						if(!is_square_attacked(true, bd, 7, 3) && !is_square_attacked(true, bd, 7, 2))  bd[7][2] = 'O';
 				}
+
 				
 				if(!isW  &&  mY == 7  &&  mX == 4  &&  !bKingMoved  &&  !is_square_attacked(false, bd, 7, 4)){
 					
@@ -2458,6 +2570,7 @@ bool has_any_legal_move(bool turn, char** board){
 }
 
 int main(){
+	
 	
 	Texture bgTexture;
 	bgTexture.loadFromFile("assets/chessboard.png");
@@ -2536,124 +2649,159 @@ int main(){
 	window.setFramerateLimit(60);
 	
 	//-------- MENU IMAGE SETUP --------
+	
 	Texture menuTexture;
 	menuTexture.loadFromFile("assets/Static_menu.png");
 	Sprite menuSprite(menuTexture);
 	//scale from original 2048x2048 image to the 1050x1050 window
+	
 	float menuScaleX = (float)window_width  / (float)menuTexture.getSize().x;
 	float menuScaleY = (float)window_height / (float)menuTexture.getSize().y;
 	menuSprite.setScale(menuScaleX, menuScaleY);
 	
 	//-------- OPTIONS MENU IMAGE SETUP --------
+	
 	Texture optionsTexture;
 	optionsTexture.loadFromFile("assets/menu_option.png");
 	Sprite optionsSprite(optionsTexture);
+	
 	//scale from original 2048x2048 options image to the 1050x1050 window
 	float optScaleX = (float)window_width  / (float)optionsTexture.getSize().x;
+	
 	float optScaleY = (float)window_height / (float)optionsTexture.getSize().y;
 	optionsSprite.setScale(optScaleX, optScaleY);
 	
 	//button hit regions (original image pixel coords scaled to window)
 	//PLAY button: original (713,745) to (1335,934)
+	
 	float playLeft   = 713.f  * menuScaleX;
 	float playTop    = 745.f  * menuScaleY;
 	float playRight  = 1335.f * menuScaleX;
 	float playBottom = 934.f  * menuScaleY;
 	//OPTIONS button: original (713,978) to (1335,1168)
+	
 	float optLeft   = 713.f  * menuScaleX;
 	float optTop    = 978.f  * menuScaleY;
 	float optRight  = 1335.f * menuScaleX;
 	float optBottom = 1168.f * menuScaleY;
+	
 	//EXIT button: original (713,1213) to (1335,1403)
 	float exitLeft   = 713.f  * menuScaleX;
+	
 	float exitTop    = 1213.f * menuScaleY;
 	float exitRight  = 1335.f * menuScaleX;
 	float exitBottom = 1403.f * menuScaleY;
 	
 	//-------- OPTIONS MENU BUTTON HIT REGIONS (original 2048x2048 coords) --------
 	//MUSIC button: original ~(713, 700) to (1335, 840)
+	
 	float musicLeft   = 713.f  * optScaleX;
 	float musicTop    = 700.f  * optScaleY;
 	float musicRight  = 1335.f * optScaleX;
 	float musicBottom = 840.f  * optScaleY;
 	//SOUNDS button: original ~(713, 870) to (1335, 1010)
+	
 	float soundsLeft   = 713.f  * optScaleX;
 	float soundsTop    = 870.f  * optScaleY;
 	float soundsRight  = 1335.f * optScaleX;
 	float soundsBottom = 1010.f * optScaleY;
 	//BOARD ROTATION button: original ~(713, 1040) to (1335, 1180)
+	
 	float rotLeft   = 713.f  * optScaleX;
 	float rotTop    = 1040.f * optScaleY;
 	float rotRight  = 1335.f * optScaleX;
 	float rotBottom = 1180.f * optScaleY;
 	//UNDO button: original ~(713, 1210) to (1335, 1350)
+	
 	float undoBtnLeft   = 713.f  * optScaleX;
 	float undoBtnTop    = 1210.f * optScaleY;
 	float undoBtnRight  = 1335.f * optScaleX;
 	float undoBtnBottom = 1350.f * optScaleY;
 	//BACK button on the options screen: original (713,1390) to (1335,1530)
+	
 	float backLeft   = 713.f  * optScaleX;
 	float backTop    = 1390.f * optScaleY;
 	float backRight  = 1335.f * optScaleX;
+	
 	float backBottom = 1530.f * optScaleY;
+	
 	
 	bool inMenu = true;
 	bool inOptions = false;
 	
+	
 	//-------- SOUND EFFECTS SETUP --------
 	sf::SoundBuffer moveBuf, checkBuf, checkmateBuf, drawBuf;
 	
+
 	moveBuf.loadFromFile("assets/Sounds/move.mp3");
 	checkBuf.loadFromFile("assets/Sounds/check.mp3");
 	checkmateBuf.loadFromFile("assets/Sounds/checkmate.mp3");
+	
 	drawBuf.loadFromFile("assets/Sounds/draw.wav");
+	
 	
 	sf::Sound moveSound(moveBuf);
 	sf::Sound checkSound(checkBuf);
+	
 	sf::Sound checkmateSound(checkmateBuf);
 	sf::Sound drawSound(drawBuf);
 	
 	moveSound.setVolume(100.f);
 	checkSound.setVolume(100.f);
+	
 	checkmateSound.setVolume(45.f);
 	drawSound.setVolume(45.f);
 	
 	//-------- BACKGROUND MUSIC SETUP --------
 	sf::Music bgMusic;
+	
 	if(bgMusic.openFromFile("assets/Sounds/bg_music.mp3")){
 		bgMusic.setLoop(true);
 		bgMusic.setVolume(30.f);
 		if(musicEnabled) bgMusic.play();
 	}
 	
+
 	//track previous check/gameOver state to trigger sounds once
+	
 	bool prevWhiteCheck = false;
 	bool prevBlackCheck = false;
 	bool prevGameOver = false;
 	bool prevDraw = false;
 	
+
 	Event ev;
 	
+
 	//game loop
 	while(window.isOpen()){
 	
+
 		//-------- OPTIONS SCREEN --------
 		if(inOptions){
 			while(window.pollEvent(ev)){
+				
 				if(ev.type == Event::Closed){
 					window.close();
 				}
+				
 				if(ev.type == Event::MouseButtonPressed && ev.mouseButton.button == Mouse::Button::Left){
+				
 					float mx = (float)ev.mouseButton.x;
 					float my = (float)ev.mouseButton.y;
 					
 					//MUSIC button clicked -> toggle background music
 					if(mx >= musicLeft && mx <= musicRight && my >= musicTop && my <= musicBottom){
+					
 						musicEnabled = !musicEnabled;
 						if(musicEnabled){
+							
 							if(bgMusic.getStatus() != sf::Music::Playing)
+						
 								bgMusic.play();
-						} else {
+						} 
+						else {
 							bgMusic.pause();
 						}
 						cout << "Music: " << (musicEnabled ? "ON" : "OFF") << endl;
@@ -2685,61 +2833,82 @@ int main(){
 				}
 			}
 			if(Keyboard::isKeyPressed(Keyboard::Escape)){
+		
 				inOptions = false;
 				inMenu = true;
+			
 			}
+			
 			window.clear();
 			window.draw(optionsSprite);
 			
 			//-------- DRAW GREEN HIGHLIGHT on enabled options --------
+			
 			{
 				auto drawEnabledHighlight = [&](float left, float top, float right, float bottom, bool enabled){
+			
 					if(!enabled) return;
 					RectangleShape highlight(Vector2f(right - left, bottom - top));
 					highlight.setPosition(left, top);
+					
 					highlight.setFillColor(Color(50, 200, 50, 65));
 					highlight.setOutlineColor(Color(80, 255, 80, 120));
 					highlight.setOutlineThickness(2.f);
+					
 					window.draw(highlight);
 				};
+				
 				
 				drawEnabledHighlight(musicLeft, musicTop, musicRight, musicBottom, musicEnabled);
 				drawEnabledHighlight(soundsLeft, soundsTop, soundsRight, soundsBottom, soundsEnabled);
 				drawEnabledHighlight(rotLeft, rotTop, rotRight, rotBottom, ROTATE_BOARD);
+				
 				drawEnabledHighlight(undoBtnLeft, undoBtnTop, undoBtnRight, undoBtnBottom, undoEnabled);
 			}
+
 			
 			window.display();
+			
 			continue; //skip the rest of the game loop while in options
 		}
 	
+
+		
 		//-------- MENU SCREEN --------
 		if(inMenu){
 			while(window.pollEvent(ev)){
+		
 				if(ev.type == Event::Closed){
 					window.close();
 				}
+				
 				if(ev.type == Event::MouseButtonPressed && ev.mouseButton.button == Mouse::Button::Left){
 					float mx = (float)ev.mouseButton.x;
 					float my = (float)ev.mouseButton.y;
+				
 					//PLAY button clicked
 					if(mx >= playLeft && mx <= playRight && my >= playTop && my <= playBottom){
 						inMenu = false;
+					
 					}
 					//OPTIONS button clicked -> go to options screen
 					if(mx >= optLeft && mx <= optRight && my >= optTop && my <= optBottom){
+					
 						inMenu = false;
 						inOptions = true;
 					}
 					//EXIT button clicked
+			
 					if(mx >= exitLeft && mx <= exitRight && my >= exitTop && my <= exitBottom){
 						window.close();
 					}
 				}
 			}
+			
 			if(Keyboard::isKeyPressed(Keyboard::Escape)){
 				window.close();
 			}
+		
 			window.clear();
 			window.draw(menuSprite);
 			window.display();
@@ -2747,25 +2916,35 @@ int main(){
 		}
 		
 		//check dettection!!! both king all the time
+		
 		whiteInCheck = false;
 		blackInCheck = false;
+		
 		
 		check_det( true,  board, whiteInCheck );
 		check_det( false, board, blackInCheck );
 		
 		
 		//-------- CHECKMATE / STALEMATE DETECTION --------
+		//hahhahaha
 		if(!gameOver && !promotionPending && !isDraw){
 			bool currentInCheck = turn ? whiteInCheck : blackInCheck;
+		
 			if(!has_any_legal_move(turn, board)){
 				gameOver = true;
+			
 				if(currentInCheck){
 					gameOverMsg = "CHECKMATE";
 					gameOverSub = turn ? "Black Wins!" : "White Wins!";
-				} else {
+				}
+				
+				else {
+				
 					gameOverMsg = "STALEMATE";
 					gameOverSub = "Draw  -  No Legal Moves";
+					
 					isDraw = true;
+				
 				}
 			}
 		}
@@ -2780,22 +2959,23 @@ int main(){
 			
 			if(ev.type == Event::MouseButtonPressed){
 				if(ev.mouseButton.button == Mouse::Button::Left ){
-					
+		
+
 					//-------- PROMOTION CLICK HANDLING --------
-					//if promotion is pending, handle the popup click instead of normal move
 					if(promotionPending){
+					
 						char chosen = handle_promotion_click(ev.mouseButton.x, ev.mouseButton.y, promotionTurn);
 						if(chosen != ' '){
 							//replace the pawn with chosen piece
+						
 							board[promotionRow][promotionCol] = chosen;
 							promotionPending = false;
 							
+							
 							//-------- BUILD PROMOTION NOTATION --------
-							//the pawn move info was saved in the undo record; we use lastMove coords
-							//since the move already happened, we reconstruct from saved state
+							
 							{
 								MoveRecord& lastRec = undoHistory.back();
-								//find where the pawn was (from the saved board snapshot vs current)
 								int fromR = -1, fromC = -1;
 								char pawnChar = promotionTurn ? 'P' : 'p';
 								for(int r=0 ; r<8  &&  fromR<0 ; r++){
@@ -2810,230 +2990,308 @@ int main(){
 								char destBefore = lastRec.boardSnap[promotionRow][promotionCol];
 								
 								string promoNotation = build_notation(
+									
+									
 									pawnChar, fromR >= 0 ? fromR : 0, fromC >= 0 ? fromC : 0,
 									promotionRow, promotionCol,
 									destBefore, false, false, false,
+									
 									true, chosen, promotionTurn, board
 								);
 								
 								notationLog.push_back(promoNotation);
 								
 								if(promotionTurn){
+									
 									cout << moveNumber << ". " << promoNotation;
-								} else {
+								} 
+								
+else {
 									cout << "  " << promoNotation << endl;
 									moveNumber++;
 								}
 							}
 							
-							//now do the turn switch and rotation that was delayed
 							turn = !turn;
 							pendingMoveSound = true;
 							
 							char temp[height][width];
+						
 							if(ROTATE_BOARD){
 							for(int i=0 ; i<height ; i++){
+							
 								for(int j=0 ; j<width ; j++){
 									temp[i][j] = board[height-1-i][width-1-j];
+								
 								}
 							}
+							
 							for(int i=0 ; i<height ; i++){
 								for(int j=0 ; j<width ; j++){
 									board[i][j] = temp[i][j];
 								}
 							}
+							
 							}
 						}
 					}
+					
 					else{
 						
-					x= (ev.mouseButton.x - boarder_width) / ((window_width - 2*boarder_width) / width);
-					y= (ev.mouseButton.y - boarder_height) / ((window_height - 2*boarder_height) / height);
+					
+						x= (ev.mouseButton.x - boarder_width) / ((window_width - 2*boarder_width) / width);
+					
+						y= (ev.mouseButton.y - boarder_height) / ((window_height - 2*boarder_height) / height);
 					
 					if(!isDraw && !gameOver)
-					clicked( window, board, x , y , mouseClicked , turn , checkCapture);
+					
+						clicked( window, board, x , y , mouseClicked , turn , checkCapture);
 					
 					}
-					}
+					
+				}
 			}
 		}
 		
 		
 		//presing escape to close
+	
+		
 		if (Keyboard::isKeyPressed(Keyboard::Escape))
 		{
+		
 			window.close();
 		}
 		
 		//-------- UNDO (press Z) --------
-		//restores the game to the state before the last move (only if undo is enabled)
 		{
 			static bool zWasPressed = false;
+		
 			bool zNow = Keyboard::isKeyPressed(Keyboard::Z);
 			if(zNow  &&  !zWasPressed  &&  undoEnabled  &&  !undoHistory.empty()  &&  !promotionPending){
 				MoveRecord& rec = undoHistory.back();
-				
+			
+
 				//restore board
 				for(int r=0 ; r<8 ; r++)  for(int c=0 ; c<8 ; c++)  board[r][c] = rec.boardSnap[r][c];
 				
+
 				//restore turn and flags
 				turn = rec.turnSnap;
 				wKingMoved = rec.wKM;  wRookKMoved = rec.wRKM;  wRookQMoved = rec.wRQM;
+				
 				bKingMoved = rec.bKM;  bRookKMoved = rec.bRKM;  bRookQMoved = rec.bRQM;
 				ep_active = rec.epActive;  ep_col = rec.epCol;
 				
 				//restore highlights
+				
 				lastMoveFromRow = rec.lmFR;  lastMoveFromCol = rec.lmFC;
 				lastMoveToRow   = rec.lmTR;  lastMoveToCol   = rec.lmTC;
+				
 				selectedRow = rec.selR;  selectedCol = rec.selC;
 				
 				//clear any displayed move indicators
 				for(int r=0 ; r<8 ; r++)  for(int c=0 ; c<8 ; c++){
+				
 					if(board[r][c] == 'O') board[r][c] = ' ';
 					checkCapture[r][c] = false;
 				}
 				
+
 				//restore move number and remove last notation entry
+				
 				moveNumber = rec.savedMoveNumber;
 				if(!notationLog.empty()) notationLog.pop_back();
 				
+
 				undoHistory.pop_back();
 				isDraw = false;
 				gameOver = false;
+				
 				gameOverMsg = "";
 				gameOverSub = "";
 			}
 			zWasPressed = zNow;
 		}
+
 		
 		// King vs King draw check (only when game is not already over)
 		if(!gameOver)
+		
 			isDraw = is_king_vs_king(board);
 		
 		//-------- SOUND EFFECTS TRIGGERS --------
 		if(soundsEnabled){
+			
 			//move / capture sound
 			if(pendingMoveSound){
 				moveSound.play();
+			
 				pendingMoveSound = false;
 				pendingCaptureSound = false; //move sound covers capture too
 			}
 			//checkmate / stalemate sound (play once)
 			if(gameOver && !prevGameOver){
+				
 				if(gameOverMsg == "CHECKMATE")
 					checkmateSound.play();
 			}
 			//draw sound (play once)
+		
 			if(isDraw && !prevDraw){
 				drawSound.play();
+			
 			}
 			//check sound (play once per new check state)
+			
 			if(!gameOver && !isDraw){
 				if(whiteInCheck && !prevWhiteCheck)
 					checkSound.play();
 				if(blackInCheck && !prevBlackCheck)
+			
 					checkSound.play();
 			}
-		} else {
+		} 
+		
+		else {
 			//sounds disabled: just clear pending flags
+		
 			pendingMoveSound = false;
 			pendingCaptureSound = false;
 		}
+		
 		prevWhiteCheck = whiteInCheck;
 		prevBlackCheck = blackInCheck;
 		prevGameOver   = gameOver;
 		prevDraw       = isDraw;
 		
+
+		
 		
 		window.clear();
 		//background
+		
 		window.draw(bgSprite);
+		
 		
 		//calling functions
 		display_board(window, board , checkCapture, whiteInCheck, blackInCheck);
 		
+
 		//-------- TURN INDICATOR --------
-		//show whose turn it is above the board
 		{
+		
 			static Font turnFont;
 			static bool turnFontLoaded = false;
 			if(!turnFontLoaded){
 				if(!turnFont.loadFromFile("C:/Windows/Fonts/arialbd.ttf"))
+			
 					turnFont.loadFromFile("C:/Windows/Fonts/arial.ttf");
 				turnFontLoaded = true;
 			}
 			
 			Text turnText;
+	
 			turnText.setFont(turnFont);
 			turnText.setString(turn ? "White's Turn" : "Black's Turn");
 			turnText.setCharacterSize(22);
+			
 			turnText.setFillColor(Color(230, 230, 230, 220));
 			turnText.setStyle(Text::Bold);
 			FloatRect tb = turnText.getLocalBounds();
+			
 			turnText.setOrigin(tb.left + tb.width/2.f, tb.top + tb.height/2.f);
 			turnText.setPosition(window_width / 2.f, boarder_height / 2.f);
 			window.draw(turnText);
 		}
+
 		
 		//-------- PROMOTION POPUP --------
-		//draw the piece selection menu when promotion is pending
+		
 		if(promotionPending){
+		
 			draw_promotion_menu(window, promotionTurn);
 		}
 		
 		// -------- GAME OVER / DRAW OVERLAY --------
+
 		if(isDraw || gameOver){
 			// Dark semi-transparent overlay
+
 			RectangleShape overlay(Vector2f(window_width, window_height));
 			overlay.setFillColor(Color(0, 0, 0, 170));
+
 			window.draw(overlay);
 			
+
 			// banner box
 			RectangleShape banner(Vector2f(620, 180));
 			banner.setOrigin(310, 90);
+
 			banner.setPosition(window_width / 2.f, window_height / 2.f - 40);
 			banner.setFillColor(Color(30, 30, 30, 230));
+
 			banner.setOutlineColor(Color(200, 200, 200, 255));
 			banner.setOutlineThickness(3.f);
 			window.draw(banner);
-			
+
+
 			static Font endFont;
+			
 			static bool endFontLoaded = false;
+			
 			if(!endFontLoaded){
+			
 				if(!endFont.loadFromFile("C:/Windows/Fonts/arialbd.ttf"))
 					endFont.loadFromFile("C:/Windows/Fonts/arial.ttf");
+				
 				endFontLoaded = true;
+
 			}
 			
 			// main text (CHECKMATE / STALEMATE / DRAW)
+
 			string mainMsg = gameOver ? gameOverMsg : "DRAW";
 			string subMsg  = gameOver ? gameOverSub : "King vs King  -  Insufficient Material";
-			
+
+
 			Text mainText;
+			
 			mainText.setFont(endFont);
+			
 			mainText.setString(mainMsg);
 			mainText.setCharacterSize(gameOver && gameOverMsg == "CHECKMATE" ? 80 : 100);
 			mainText.setFillColor(Color(220, 220, 220, 255));
+			
 			mainText.setStyle(Text::Bold);
 			FloatRect tb = mainText.getLocalBounds();
 			mainText.setOrigin(tb.left + tb.width/2.f, tb.top + tb.height/2.f);
+			
 			mainText.setPosition(window_width / 2.f, window_height / 2.f - 55);
 			window.draw(mainText);
 			
+			
 			// subtitle
 			Text subText;
+			
 			subText.setFont(endFont);
 			subText.setString(subMsg);
+			
 			subText.setCharacterSize(26);
 			subText.setFillColor(Color(180, 180, 180, 210));
 			FloatRect sb = subText.getLocalBounds();
+			
 			subText.setOrigin(sb.left + sb.width/2.f, sb.top + sb.height/2.f);
 			subText.setPosition(window_width / 2.f, window_height / 2.f + 55);
 			window.draw(subText);
 		}
+
 		
 		window.display();
 	}
 	
 return 0;
+
+	//rarrwrrwrwrwrrwrw ENDOOOOOOOOOOOOOOOOOOOOOOOO~
+
 }
