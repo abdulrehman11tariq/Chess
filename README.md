@@ -1,11 +1,14 @@
 # CHESS Engine and GUI
-My love for chess inspired me to build a fully playable two-player chess engine along with its pizel-art Graphical User Interface built in C++ with SFML. The project began in my first semester and continued into my second, requiring significant efforts and time, but I am proud of the final result and the knowledge I gained throughout the development process.
+My love for chess inspired me to build a fully playable two-player chess engine along with its pixel-art Graphical User Interface built in C++ with SFML. The project began in my first semester and continued into my second, requiring significant efforts and time, but I am proud of the final result and the knowledge I gained throughout the development process.
+
 _ _ _
+
 ## 🎮Demo
 
 
 
 _ _ _
+
 ## ✨Features
 
 > Core Chess Rules
@@ -29,5 +32,30 @@ _ _ _
 - Move history logged in algebraic notation, printed to console/terminal
 - Configurable toggles: music, sound effects, board rotation, and undo, all avaialable in Options menu
 
-
 _ _ _
+
+## 🛠️ Technologies Used
+
+- C++
+- SFML
+
+_ _ _ 
+
+## 🕹️ Controls
+ 
+| Action              | Input                            |
+|---------------------|----------------------------------|
+| Select / move piece | Left mouse click                 |
+| Undo last move      | Using `Z`                        |
+| Quit                | Using `Esc`                      |
+| Promotion choice    | Clickable popup |
+ 
+---
+
+## 🚀 How to Run
+
+1. Clone the repository:
+
+```Bash
+git clone 
+ 
