@@ -1679,41 +1679,70 @@ void clicked( RenderWindow& window ,char** board, int mouseX , int mouseY , bool
 		if (board[mouseY][mouseX] == 'p') {
 			last_clicked_piece = 'p';
 		
-			if( mouseY-1 >= 0 && board[mouseY-1][mouseX] == ' '){
-				board[mouseY-1][mouseX] = 'O';
-				if(mouseY == 6 && board[mouseY-2][mouseX] == ' ' )
-					board[mouseY-2][mouseX] = 'O';
+			if(ROTATE_BOARD){
+				//board is rotated so black pawns move upward (same as white)
+				if( mouseY-1 >= 0 && board[mouseY-1][mouseX] == ' '){
+					board[mouseY-1][mouseX] = 'O';
+					if(mouseY == 6 && board[mouseY-2][mouseX] == ' ' )
+						board[mouseY-2][mouseX] = 'O';
 			
-			}
+				}
 			
-			
-			if (mouseY-1 >= 0 && mouseX-1 >= 0) {
-				if(isWhitePiece(board[mouseY-1][mouseX-1]))
-			
-					checkCapture[mouseY-1][mouseX-1] = true;
-			}
-			
-			if (mouseY-1 >= 0 && mouseX+1 < width) {
 				
-				if(isWhitePiece(board[mouseY-1][mouseX+1]))
-					checkCapture[mouseY-1][mouseX+1] = true;
-			}
+				if (mouseY-1 >= 0 && mouseX-1 >= 0) {
+					if(isWhitePiece(board[mouseY-1][mouseX-1]))
 			
+						checkCapture[mouseY-1][mouseX-1] = true;
+				}
+			
+				if (mouseY-1 >= 0 && mouseX+1 < width) {
+				
+					if(isWhitePiece(board[mouseY-1][mouseX+1]))
+						checkCapture[mouseY-1][mouseX+1] = true;
+				}
+				
 			//-------- EN PASSANT for black pawn --------
 		
 			
-			if(ep_active && mouseY == 3){
+				if(ep_active && mouseY == 3){
 			
-				if(mouseX - 1 == ep_col && mouseX - 1 >= 0 && board[3][ep_col] == 'P'){
-					board[2][ep_col] = 'O';
+					if(mouseX - 1 == ep_col && mouseX - 1 >= 0 && board[3][ep_col] == 'P'){
+						board[2][ep_col] = 'O';
 				
+					}
+					if(mouseX + 1 == ep_col && mouseX + 1 < width && board[3][ep_col] == 'P'){
+				
+						board[2][ep_col] = 'O';
+					}
 				}
-				if(mouseX + 1 == ep_col && mouseX + 1 < width && board[3][ep_col] == 'P'){
-				
-					board[2][ep_col] = 'O';
+			}
 			
+			else {
+				//no rotation: black pawns are at top, move downward
+				if( mouseY+1 < height && board[mouseY+1][mouseX] == ' '){
+					board[mouseY+1][mouseX] = 'O';
+					if(mouseY == 1 && board[mouseY+2][mouseX] == ' ' )
+						board[mouseY+2][mouseX] = 'O';
 				}
-
+				
+				if (mouseY+1 < height && mouseX-1 >= 0) {
+					if(isWhitePiece(board[mouseY+1][mouseX-1]))
+						checkCapture[mouseY+1][mouseX-1] = true;
+				}
+				if (mouseY+1 < height && mouseX+1 < width) {
+					if(isWhitePiece(board[mouseY+1][mouseX+1]))
+						checkCapture[mouseY+1][mouseX+1] = true;
+				}
+				
+				//-------- EN PASSANT for black pawn (no rotation) --------
+				if(ep_active && mouseY == 4){
+					if(mouseX - 1 == ep_col && mouseX - 1 >= 0 && board[4][ep_col] == 'P'){
+						board[5][ep_col] = 'O';
+					}
+					if(mouseX + 1 == ep_col && mouseX + 1 < width && board[4][ep_col] == 'P'){
+						board[5][ep_col] = 'O';
+					}
+				}
 			}
 
 		}
@@ -2702,28 +2731,28 @@ int main(){
 	//SOUNDS button: original ~(713, 870) to (1335, 1010)
 	
 	float soundsLeft   = 713.f  * optScaleX;
-	float soundsTop    = 870.f  * optScaleY;
+	float soundsTop    = 865.f  * optScaleY;
 	float soundsRight  = 1335.f * optScaleX;
-	float soundsBottom = 1010.f * optScaleY;
+	float soundsBottom = 1000.f * optScaleY;
 	//BOARD ROTATION button: original ~(713, 1040) to (1335, 1180)
 	
 	float rotLeft   = 713.f  * optScaleX;
-	float rotTop    = 1040.f * optScaleY;
+	float rotTop    = 1025.f * optScaleY;
 	float rotRight  = 1335.f * optScaleX;
-	float rotBottom = 1180.f * optScaleY;
+	float rotBottom = 1165.f * optScaleY;
 	//UNDO button: original ~(713, 1210) to (1335, 1350)
 	
 	float undoBtnLeft   = 713.f  * optScaleX;
-	float undoBtnTop    = 1210.f * optScaleY;
+	float undoBtnTop    = 1185.f * optScaleY;
 	float undoBtnRight  = 1335.f * optScaleX;
-	float undoBtnBottom = 1350.f * optScaleY;
+	float undoBtnBottom = 1320.f * optScaleY;
 	//BACK button on the options screen: original (713,1390) to (1335,1530)
 	
 	float backLeft   = 713.f  * optScaleX;
-	float backTop    = 1390.f * optScaleY;
+	float backTop    = 1360.f * optScaleY;
 	float backRight  = 1335.f * optScaleX;
 	
-	float backBottom = 1530.f * optScaleY;
+	float backBottom = 1500.f * optScaleY;
 	
 	
 	bool inMenu = true;
