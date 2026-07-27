@@ -5,8 +5,20 @@ My passion for chess inspired me to build a fully playable two-player chess engi
 
 ## 🎮 Demo
 
+### GIF
 
+![Chess Game Demo](assets/vid.gif)
 
+### 🖼️ Screenshots
+
+<p align="center">
+  <img src="assets/ss1.png" width="45%">
+  <img src="assets/ss2.png" width="45%">
+</p>
+
+<p align="center">
+  <img src="assets/ss3.png" width="45%">
+</p>
 ---
 
 ## ✨ Features
