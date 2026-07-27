@@ -3245,7 +3245,7 @@ else {
 		// -------- GAME OVER / DRAW OVERLAY --------
 
 		if(isDraw || gameOver){
-			// Dark semi-transparent overlay
+			//Dark semi-transparent overlay
 
 			RectangleShape overlay(Vector2f(window_width, window_height));
 			overlay.setFillColor(Color(0, 0, 0, 170));
@@ -3254,7 +3254,7 @@ else {
 			
 
 			// banner box
-			RectangleShape banner(Vector2f(620, 180));
+			RectangleShape banner(Vector2f(620, 220));
 			banner.setOrigin(310, 90);
 
 			banner.setPosition(window_width / 2.f, window_height / 2.f - 40);
