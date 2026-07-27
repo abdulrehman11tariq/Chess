@@ -19,6 +19,7 @@ My passion for chess inspired me to build a fully playable two-player chess engi
 <p align="center">
   <img src="assets/Demo/ss3.png" width="45%">
 </p>
+
 ---
 
 ## ✨ Features
