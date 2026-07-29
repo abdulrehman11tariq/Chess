@@ -878,9 +878,17 @@ void clicked( RenderWindow& window ,char** board, int mouseX , int mouseY , bool
 		
 		//-------- EN PASSANT CAPTURE detection---------------
 		bool isEnPassantCapture = false;
-		if(ep_active && board[mouseY][mouseX] == 'O' && mouseY == 2 && mouseX == ep_col){
-			if( (last_clicked_piece == 'P' || last_clicked_piece == 'p') && mouseX != last_mouseX ){
-				isEnPassantCapture = true;
+		{
+			int epCaptureRow;
+			if(ROTATE_BOARD){
+				epCaptureRow = 2; //both colors capture EP at row 2 with rotation
+			} else {
+				epCaptureRow = (last_clicked_piece == 'P') ? 2 : 5;
+			}
+			if(ep_active && board[mouseY][mouseX] == 'O' && mouseY == epCaptureRow && mouseX == ep_col){
+				if( (last_clicked_piece == 'P' || last_clicked_piece == 'p') && mouseX != last_mouseX ){
+					isEnPassantCapture = true;
+				}
 			}
 		}
 		
@@ -902,25 +910,54 @@ void clicked( RenderWindow& window ,char** board, int mouseX , int mouseY , bool
 
 		}
 
-		if(last_clicked_piece == 'k' && last_mouseY == 7 && last_mouseX == 4){
-		
-			if(mouseY == 7 && mouseX == 6){
-				board[7][5] = 'r';
-				board[7][7] = ' ';
-			}
+		if(ROTATE_BOARD){
+			//with rotation, black king is at row 7 col 3 (rotated from [0][4])
+			if(last_clicked_piece == 'k' && last_mouseY == 7 && last_mouseX == 3){
 			
-			if(mouseY == 7 && mouseX == 2){
-				board[7][3] = 'r';
-				board[7][0] = ' ';
+				if(mouseY == 7 && mouseX == 1){
+					//kingside castling: rook from col 0 to col 2
+					board[7][2] = 'r';
+					board[7][0] = ' ';
+				}
+				
+				if(mouseY == 7 && mouseX == 5){
+					//queenside castling: rook from col 7 to col 4
+					board[7][4] = 'r';
+					board[7][7] = ' ';
+				}
+			}
+		}
+		else{
+			//without rotation, black king is at row 0 col 4
+			if(last_clicked_piece == 'k' && last_mouseY == 0 && last_mouseX == 4){
+			
+				if(mouseY == 0 && mouseX == 6){
+					//kingside castling: rook from col 7 to col 5
+					board[0][5] = 'r';
+					board[0][7] = ' ';
+				}
+				
+				if(mouseY == 0 && mouseX == 2){
+					//queenside castling: rook from col 0 to col 3
+					board[0][3] = 'r';
+					board[0][0] = ' ';
+				}
 			}
 		}
 		
 		board[mouseY][mouseX] = last_clicked_piece;
 		board[last_mouseY][last_mouseX] = ' ';
 		
-		//remove the en passant captured pawn (it sits at row 3, same column)
+		//remove the en passant captured pawn
 		if(isEnPassantCapture){
-			board[3][ep_col] = ' ';
+			if(ROTATE_BOARD){
+				board[3][ep_col] = ' '; //both colors: pawn is at row 3 with rotation
+			} else {
+				if(last_clicked_piece == 'P')
+					board[3][ep_col] = ' '; //white captures black pawn at row 3
+				else
+					board[4][ep_col] = ' '; //black captures white pawn at row 4
+			}
 		}
 		
 		//-------- CASTLING FLAG UPDATES --------
@@ -934,39 +971,66 @@ void clicked( RenderWindow& window ,char** board, int mouseX , int mouseY , bool
 		else{
 			if(last_clicked_piece == 'k') bKingMoved  = true;
 
-			if(last_clicked_piece == 'r' && last_mouseX == 7 && last_mouseY == 7) bRookKMoved = true;
-			if(last_clicked_piece == 'r' && last_mouseX == 0 && last_mouseY == 7) bRookQMoved = true;
+			if(ROTATE_BOARD){
+				//with rotation, black rooks start at rotated positions: row 7, cols 0 and 7
+				if(last_clicked_piece == 'r' && last_mouseX == 0 && last_mouseY == 7) bRookKMoved = true;
+				if(last_clicked_piece == 'r' && last_mouseX == 7 && last_mouseY == 7) bRookQMoved = true;
+			}
+			else{
+				//without rotation, black rooks are at row 0
+				if(last_clicked_piece == 'r' && last_mouseX == 7 && last_mouseY == 0) bRookKMoved = true;
+				if(last_clicked_piece == 'r' && last_mouseX == 0 && last_mouseY == 0) bRookQMoved = true;
+			}
 		}
 		
 
-		if(turn == 1){
-
-			//white just moved, may have captured a black rook at row 0
-			if(mouseY == 0 && mouseX == 7) bRookKMoved = true;
-			if(mouseY == 0 && mouseX == 0) bRookQMoved = true;
-		
-		} 
-		
-		else {
-			//black just moved, may have captured a white rook at row 0
-			if(mouseY == 0 && mouseX == 7) wRookKMoved = true;
-			if(mouseY == 0 && mouseX == 0) wRookQMoved = true;
-		
+		//rook capture detection: if a rook is captured, mark it as moved
+		if(ROTATE_BOARD){
+			//with rotation, opponent rooks are always at row 0 (before rotation)
+			//but after rotation they're at row 7, and we already handle that above
+			//the capture destination is where the piece lands:
+			if(turn == 1){
+				//white captured at opponent's rook square (row 0 before rotation = row 7 after rotation minus 1 cycle)
+				//but since board hasn't rotated yet, black rooks are at row 0
+				if(mouseY == 0 && mouseX == 7) bRookKMoved = true;
+				if(mouseY == 0 && mouseX == 0) bRookQMoved = true;
+			} else {
+				//black captured at white rook square (white rooks rotate to row 0 on black's turn)
+				if(mouseY == 0 && mouseX == 0) wRookKMoved = true;
+				if(mouseY == 0 && mouseX == 7) wRookQMoved = true;
+			}
+		}
+		else{
+			if(turn == 1){
+				//white captured a black rook at row 0
+				if(mouseY == 0 && mouseX == 7) bRookKMoved = true;
+				if(mouseY == 0 && mouseX == 0) bRookQMoved = true;
+			} else {
+				//black captured a white rook at row 7
+				if(mouseY == 7 && mouseX == 7) wRookKMoved = true;
+				if(mouseY == 7 && mouseX == 0) wRookQMoved = true;
+			}
 		}
 		
 		//-------- EN PASSANT STATE UPDATEE ----------
-		if( (last_clicked_piece == 'P' || last_clicked_piece == 'p') && last_mouseY == 6 && mouseY == 4){
-		
-			ep_active = true;
-			ep_col    = ROTATE_BOARD ? (width - 1 - mouseX) : mouseX;
-		
-		}
-		
-		else{
-		
-			ep_active = false;
-			ep_col    = -1;
-	
+		{
+			bool epTriggered = false;
+			//white pawn (or black with rotation) double-step: row 6 -> row 4
+			if( (last_clicked_piece == 'P' || last_clicked_piece == 'p') && last_mouseY == 6 && mouseY == 4){
+				ep_active = true;
+				ep_col    = ROTATE_BOARD ? (width - 1 - mouseX) : mouseX;
+				epTriggered = true;
+			}
+			//black pawn without rotation double-step: row 1 -> row 3
+			if(!ROTATE_BOARD && last_clicked_piece == 'p' && last_mouseY == 1 && mouseY == 3){
+				ep_active = true;
+				ep_col    = mouseX;
+				epTriggered = true;
+			}
+			if(!epTriggered){
+				ep_active = false;
+				ep_col    = -1;
+			}
 		}
 		
 		//-------- LAST MOVE HIGHLIGHT update --------
@@ -1036,10 +1100,27 @@ void clicked( RenderWindow& window ,char** board, int mouseX , int mouseY , bool
 			
 			bool castleK = false, castleQ = false;
 			
-			if((last_clicked_piece == 'K' || last_clicked_piece == 'k') && last_mouseX == 4 && last_mouseY == 7){
+			//white king always castles from row 7, col 4
+			if(last_clicked_piece == 'K' && last_mouseX == 4 && last_mouseY == 7){
 				if(mouseX == 6 && mouseY == 7) castleK = true;
-			
 				if(mouseX == 2 && mouseY == 7) castleQ = true;
+			}
+			
+			//black king castling detection
+			if(last_clicked_piece == 'k'){
+				if(ROTATE_BOARD){
+					//rotated: black king at row 7, col 3
+					if(last_mouseX == 3 && last_mouseY == 7){
+						if(mouseX == 1 && mouseY == 7) castleK = true;
+						if(mouseX == 5 && mouseY == 7) castleQ = true;
+					}
+				} else {
+					//no rotation: black king at row 0, col 4
+					if(last_mouseX == 4 && last_mouseY == 0){
+						if(mouseX == 6 && mouseY == 0) castleK = true;
+						if(mouseX == 2 && mouseY == 0) castleQ = true;
+					}
+				}
 			}
 			
 			
@@ -2247,23 +2328,43 @@ void clicked( RenderWindow& window ,char** board, int mouseX , int mouseY , bool
 
 			//-------- CASTLING for BLACK king --------
 			
-			if(mouseY == 7 && mouseX == 4 && !bKingMoved && !is_square_attacked(false, board, 7, 4)){
-				
-				//kingside
-			
-				if(!bRookKMoved && board[7][7] == 'r' && board[7][5] == ' ' && board[7][6] == ' '){
-					if(!is_square_attacked(false, board, 7, 5) && !is_square_attacked(false, board, 7, 6)){
-						board[7][6] = 'O';
+			if(ROTATE_BOARD){
+				//with rotation, black king is at row 7, col 3 (rotated from [0][4])
+				//black h-rook (kingside) is at col 0 (rotated from [0][7])
+				//black a-rook (queenside) is at col 7 (rotated from [0][0])
+				if(mouseY == 7 && mouseX == 3 && !bKingMoved && !is_square_attacked(false, board, 7, 3)){
+					
+					//kingside: king goes to col 1, rook from col 0 goes to col 2
+					if(!bRookKMoved && board[7][0] == 'r' && board[7][1] == ' ' && board[7][2] == ' '){
+						if(!is_square_attacked(false, board, 7, 2) && !is_square_attacked(false, board, 7, 1)){
+							board[7][1] = 'O';
+						}
 					}
-				
+					
+					//queenside: king goes to col 5, rook from col 7 goes to col 4
+					if(!bRookQMoved && board[7][7] == 'r' && board[7][4] == ' ' && board[7][5] == ' ' && board[7][6] == ' '){
+						if(!is_square_attacked(false, board, 7, 4) && !is_square_attacked(false, board, 7, 5)){
+							board[7][5] = 'O';
+						}
+					}
 				}
-				
-				//queenside
-				
-				if(!bRookQMoved && board[7][0] == 'r' && board[7][3] == ' ' && board[7][2] == ' ' && board[7][1] == ' '){
-					if(!is_square_attacked(false, board, 7, 3) && !is_square_attacked(false, board, 7, 2)){
-				
-						board[7][2] = 'O';
+			}
+			else{
+				//without rotation, black king is at row 0, col 4
+				if(mouseY == 0 && mouseX == 4 && !bKingMoved && !is_square_attacked(false, board, 0, 4)){
+					
+					//kingside
+					if(!bRookKMoved && board[0][7] == 'r' && board[0][5] == ' ' && board[0][6] == ' '){
+						if(!is_square_attacked(false, board, 0, 5) && !is_square_attacked(false, board, 0, 6)){
+							board[0][6] = 'O';
+						}
+					}
+					
+					//queenside
+					if(!bRookQMoved && board[0][0] == 'r' && board[0][3] == ' ' && board[0][2] == ' ' && board[0][1] == ' '){
+						if(!is_square_attacked(false, board, 0, 3) && !is_square_attacked(false, board, 0, 2)){
+							board[0][2] = 'O';
+						}
 					}
 				}
 			}
@@ -2386,21 +2487,33 @@ bool has_any_legal_move(bool turn, char** board){
 			
 			else if(piece == 'p'){
 				
-				if(mY-1 >= 0  &&  bd[mY-1][mX] == ' '){
-
-					bd[mY-1][mX] = 'O';
-					if(mY == 6  &&  bd[mY-2][mX] == ' ')  bd[mY-2][mX] = 'O';
+				if(ROTATE_BOARD){
+					//with rotation, black pawns move upward (same as white)
+					if(mY-1 >= 0  &&  bd[mY-1][mX] == ' '){
+						bd[mY-1][mX] = 'O';
+						if(mY == 6  &&  bd[mY-2][mX] == ' ')  bd[mY-2][mX] = 'O';
+					}
+					if(mY-1 >= 0  &&  mX-1 >= 0  &&  isWhitePiece(bd[mY-1][mX-1]))  capArr[mY-1][mX-1] = true;
+					if(mY-1 >= 0  &&  mX+1 < 8   &&  isWhitePiece(bd[mY-1][mX+1]))  capArr[mY-1][mX+1] = true;
+					
+					if(ep_active  &&  mY == 3){
+						if(mX-1 == ep_col  &&  mX-1 >= 0  &&  bd[3][ep_col] == 'P')  bd[2][ep_col] = 'O';
+						if(mX+1 == ep_col  &&  mX+1 < 8   &&  bd[3][ep_col] == 'P')  bd[2][ep_col] = 'O';
+					}
 				}
-
-
-				if(mY-1 >= 0  &&  mX-1 >= 0  &&  isWhitePiece(bd[mY-1][mX-1]))  capArr[mY-1][mX-1] = true;
-				if(mY-1 >= 0  &&  mX+1 < 8   &&  isWhitePiece(bd[mY-1][mX+1]))  capArr[mY-1][mX+1] = true;
-				
-
-				if(ep_active  &&  mY == 3){
-					if(mX-1 == ep_col  &&  mX-1 >= 0  &&  bd[3][ep_col] == 'P')  bd[2][ep_col] = 'O';
-				
-					if(mX+1 == ep_col  &&  mX+1 < 8   &&  bd[3][ep_col] == 'P')  bd[2][ep_col] = 'O';
+				else{
+					//without rotation, black pawns move downward
+					if(mY+1 < 8  &&  bd[mY+1][mX] == ' '){
+						bd[mY+1][mX] = 'O';
+						if(mY == 1  &&  bd[mY+2][mX] == ' ')  bd[mY+2][mX] = 'O';
+					}
+					if(mY+1 < 8  &&  mX-1 >= 0  &&  isWhitePiece(bd[mY+1][mX-1]))  capArr[mY+1][mX-1] = true;
+					if(mY+1 < 8  &&  mX+1 < 8   &&  isWhitePiece(bd[mY+1][mX+1]))  capArr[mY+1][mX+1] = true;
+					
+					if(ep_active  &&  mY == 4){
+						if(mX-1 == ep_col  &&  mX-1 >= 0  &&  bd[4][ep_col] == 'P')  bd[5][ep_col] = 'O';
+						if(mX+1 == ep_col  &&  mX+1 < 8   &&  bd[4][ep_col] == 'P')  bd[5][ep_col] = 'O';
+					}
 				}
 			}
 			
@@ -2570,13 +2683,27 @@ bool has_any_legal_move(bool turn, char** board){
 				}
 
 				
-				if(!isW  &&  mY == 7  &&  mX == 4  &&  !bKingMoved  &&  !is_square_attacked(false, bd, 7, 4)){
-					
-					if(!bRookKMoved  &&  bd[7][7] == 'r'  &&  bd[7][5] == ' '  &&  bd[7][6] == ' ')
-						if(!is_square_attacked(false, bd, 7, 5) && !is_square_attacked(false, bd, 7, 6))  bd[7][6] = 'O';
-					
-					if(!bRookQMoved  &&  bd[7][0] == 'r'  &&  bd[7][3] == ' '  &&  bd[7][2] == ' '  &&  bd[7][1] == ' ')
-						if(!is_square_attacked(false, bd, 7, 3) && !is_square_attacked(false, bd, 7, 2))  bd[7][2] = 'O';
+				if(!isW  &&  !bKingMoved){
+					if(ROTATE_BOARD){
+						//rotated: black king at row 7, col 3
+						if(mY == 7  &&  mX == 3  &&  !is_square_attacked(false, bd, 7, 3)){
+							//kingside: rook at col 0, king goes to col 1
+							if(!bRookKMoved  &&  bd[7][0] == 'r'  &&  bd[7][1] == ' '  &&  bd[7][2] == ' ')
+								if(!is_square_attacked(false, bd, 7, 2) && !is_square_attacked(false, bd, 7, 1))  bd[7][1] = 'O';
+							//queenside: rook at col 7, king goes to col 5
+							if(!bRookQMoved  &&  bd[7][7] == 'r'  &&  bd[7][4] == ' '  &&  bd[7][5] == ' '  &&  bd[7][6] == ' ')
+								if(!is_square_attacked(false, bd, 7, 4) && !is_square_attacked(false, bd, 7, 5))  bd[7][5] = 'O';
+						}
+					}
+					else{
+						//no rotation: black king at row 0, col 4
+						if(mY == 0  &&  mX == 4  &&  !is_square_attacked(false, bd, 0, 4)){
+							if(!bRookKMoved  &&  bd[0][7] == 'r'  &&  bd[0][5] == ' '  &&  bd[0][6] == ' ')
+								if(!is_square_attacked(false, bd, 0, 5) && !is_square_attacked(false, bd, 0, 6))  bd[0][6] = 'O';
+							if(!bRookQMoved  &&  bd[0][0] == 'r'  &&  bd[0][3] == ' '  &&  bd[0][2] == ' '  &&  bd[0][1] == ' ')
+								if(!is_square_attacked(false, bd, 0, 3) && !is_square_attacked(false, bd, 0, 2))  bd[0][2] = 'O';
+						}
+					}
 				}
 			}
 			
