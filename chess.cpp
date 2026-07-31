@@ -2387,31 +2387,58 @@ void clicked( RenderWindow& window ,char** board, int mouseX , int mouseY , bool
 	mouseClicked = true;
 	
 	//-------- SELECTION HIGHLIGHT update --------
+	//only highlight when the player actually clicked on one of their own pieces
 
-	selectedRow = mouseY;
-	selectedCol = mouseX;
+	if(last_clicked_piece != ' '){
+		selectedRow = mouseY;
+		selectedCol = mouseX;
+	}
 	
 	
 }
 	
 //func end
 
-// Returns true when the only pieces left on the board are the two kings
+// Returns true when insufficient material remains to deliver checkmate
+// Covers: K vs K, K+N vs K, K+B vs K, K+B vs K+B (same color bishops)
 
 bool is_king_vs_king(char** board){
+
+	int wBishops = 0, bBishops = 0, wKnights = 0, bKnights = 0;
+	int wBishopColor = -1, bBishopColor = -1; // 0 = light, 1 = dark
+	int otherPieces = 0;
 
 	for(int i = 0; i < height; i++){
 
 		for(int j = 0; j < width; j++){
 			char p = board[i][j];
 
-			if(p != ' ' && p != 'K' && p != 'k' && p != 'O')
-				return false;
+			if(p == ' ' || p == 'K' || p == 'k' || p == 'O') continue;
 
+			if(p == 'N'){ wKnights++; }
+			else if(p == 'n'){ bKnights++; }
+			else if(p == 'B'){ wBishops++; wBishopColor = (i + j) % 2; }
+			else if(p == 'b'){ bBishops++; bBishopColor = (i + j) % 2; }
+			else { otherPieces++; }
 		}
 
 	}
-	return true;
+
+	if(otherPieces > 0) return false;
+
+	int totalMinor = wBishops + bBishops + wKnights + bKnights;
+
+	// K vs K
+	if(totalMinor == 0) return true;
+
+	// K+N vs K or K+B vs K
+	if(totalMinor == 1) return true;
+
+	// K+B vs K+B with bishops on same color squares
+	if(totalMinor == 2 && wBishops == 1 && bBishops == 1 && wBishopColor == bBishopColor)
+		return true;
+
+	return false;
 }
 
 
@@ -3408,7 +3435,7 @@ else {
 			// main text (CHECKMATE / STALEMATE / DRAW)
 
 			string mainMsg = gameOver ? gameOverMsg : "DRAW";
-			string subMsg  = gameOver ? gameOverSub : "King vs King  -  Insufficient Material";
+			string subMsg  = gameOver ? gameOverSub : "Insufficient Material  -  Draw";
 
 
 			Text mainText;
